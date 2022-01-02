@@ -31,7 +31,7 @@ export class OmiliaSession {
     public getCandidateSpeakersInChannel(): Set<string> {
         const speakersInChannel = new Set<string>();
         this.candidateSpeakers.forEach((candidateId) => {
-            if (this.candidateSpeakers.has(candidateId)) {
+            if (this.userChannel.members.has(candidateId)) {
                 speakersInChannel.add(candidateId);
             }
         });
