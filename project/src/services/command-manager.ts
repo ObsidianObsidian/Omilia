@@ -12,7 +12,7 @@ import {
     UnknownArgumentError,
     UnknownCommandError,
 } from "../constants/omilia-error";
-import {DEFAULT_SESSION_SETTINGS, MINIMUM_REFRESH_DELAY} from "../constants/session-constants";
+import {DEFAULT_SESSION_REFRESH_DELAY, MINIMUM_REFRESH_DELAY} from "../constants/session-constants";
 import {SessionSettings} from "../interfaces/session-settings";
 import {OmiliaDuration} from "../utils/omilia-duration";
 import {Formatter} from "./formatter";
@@ -70,7 +70,7 @@ export class CommandManager {
     }
 
     private static extractSessionSettingsFromArgs(args: string[]): SessionSettings {
-        const sessionSettings: SessionSettings = DEFAULT_SESSION_SETTINGS;
+        const sessionSettings: SessionSettings = {refreshDelay: new OmiliaDuration(DEFAULT_SESSION_REFRESH_DELAY)};
         for (let i = 0; i < args.length; i += 2) {
             const arg = args[i];
             const val = args[i + 1];
