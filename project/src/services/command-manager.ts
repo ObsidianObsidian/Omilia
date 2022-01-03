@@ -8,12 +8,13 @@ import {
 } from "../constants/command-constants";
 import {
     InvalidCommandFormatError,
-    InvalidTimeFormatError, NoValueProvidedForArgumentError,
+    NoValueProvidedForArgumentError,
     UnknownArgumentError,
     UnknownCommandError,
 } from "../constants/omilia-error";
 import {DEFAULT_SESSION_SETTINGS, MINIMUM_REFRESH_DELAY} from "../constants/session-constants";
 import {SessionSettings} from "../interfaces/session-settings";
+import {OmiliaDuration} from "../utils/omilia-duration";
 import {Formatter} from "./formatter";
 import {Orchestrator} from "./orchestrator";
 
@@ -68,30 +69,6 @@ export class CommandManager {
         return [command, args];
     }
 
-    private static getMsTimeFromFormatted(formattedTime: string): number {
-        const unitStrs: Array<[string, number]> = [["h", 60 * 60 * 1000], ["m", 60 * 1000], ["s", 1000]];
-        let totalTime = 0;
-        try {
-            for (const [unitStr, toMsConstant] of unitStrs) {
-                const unitIdx = formattedTime.indexOf(unitStr);
-                if (unitIdx === -1) {
-                    continue;
-                }
-                let numStart = unitIdx;
-                while (!isNaN(Number(formattedTime[numStart - 1]))) {
-                    numStart--;
-                }
-                totalTime += Number(formattedTime.substring(numStart, unitIdx)) * toMsConstant;
-                if (!(numStart < unitIdx)) {
-                    throw new Error();
-                }
-            }
-        } catch (e) {
-            throw new InvalidTimeFormatError(formattedTime);
-        }
-        return totalTime;
-    }
-
     private static extractSessionSettingsFromArgs(args: string[]): SessionSettings {
         const sessionSettings: SessionSettings = DEFAULT_SESSION_SETTINGS;
         for (let i = 0; i < args.length; i += 2) {
@@ -102,23 +79,18 @@ export class CommandManager {
             }
             switch (arg) {
                 case TIME_WINDOW_DURATION:
-                    sessionSettings.timeWindowDuration = CommandManager.getMsTimeFromFormatted(val);
-                    if (sessionSettings.timeWindowDuration === 0) {
-                        throw new InvalidTimeFormatError(val);
-                    }
+                    sessionSettings.timeWindowDuration = OmiliaDuration.fromFormattedTimeString(val, true);
                     break;
                 case STATUS_MESSAGE_REFRESH_DELAY:
-                    sessionSettings.refreshDelay = CommandManager.getMsTimeFromFormatted(val);
-                    if (sessionSettings.refreshDelay === 0) {
-                        throw new InvalidTimeFormatError(val);
-                    }
+                    sessionSettings.refreshDelay = OmiliaDuration.fromFormattedTimeString(val, true);
                     break;
                 default:
                     throw new UnknownArgumentError(START_MONITORING_CMD, arg);
             }
         }
 
-        sessionSettings.refreshDelay = Math.max(MINIMUM_REFRESH_DELAY, sessionSettings.refreshDelay);
+        const safeRefreshDelay = Math.max(MINIMUM_REFRESH_DELAY, sessionSettings.refreshDelay.valueOf());
+        sessionSettings.refreshDelay = new OmiliaDuration(safeRefreshDelay);
         return sessionSettings;
     }
 }

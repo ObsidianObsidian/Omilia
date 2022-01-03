@@ -1,6 +1,6 @@
 import {GuildTextBasedChannel, If, TextBasedChannel} from "discord.js";
+import {OmiliaDuration} from "../utils/omilia-duration";
 import {AVAILABLE_COMMAND_ARGS, AVAILABLE_COMMANDS, COMMAND_PREFIX, LEAVE_CMD, STOP_CMD} from "./command-constants";
-import {Formatter} from "../services/formatter";
 import {MAXIMUM_INACTIVITY_THRESHOLD} from "./session-constants";
 
 export class OmiliaError extends Error {
@@ -56,8 +56,7 @@ export class NotInVoiceChannelError extends OmiliaError {
 export class InactivityTimeoutError extends OmiliaError {
     constructor() {
         super(`Left the channel. No one spoke for more than ` +
-            `${Formatter.formatMsTime(MAXIMUM_INACTIVITY_THRESHOLD)}.\n` +
-            `I'm a bot with needs.`);
+            `${new OmiliaDuration(MAXIMUM_INACTIVITY_THRESHOLD).toString()}.\n`);
     }
 }
 

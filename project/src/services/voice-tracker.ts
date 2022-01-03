@@ -25,7 +25,7 @@ export class VoiceTracker {
     public getUserRelevantSpeakTime(userId: string): number {
         let oldestAllowedIntervention = this.birthTime;
         if (this.settings.timeWindowDuration) {
-            oldestAllowedIntervention = Date.now() - this.settings.timeWindowDuration;
+            oldestAllowedIntervention = Date.now() - this.settings.timeWindowDuration.valueOf();
         }
 
         const interventionsArray = this.speakingRecords.get(userId);

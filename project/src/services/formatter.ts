@@ -8,6 +8,7 @@ import {
 } from "../constants/command-constants";
 import {DEPENDENCIES, REPO_URL} from "../constants/info-constants";
 import {REQUEST_TO_SPEAK_EMOJI, REQUEST_TO_SPEAK_EMOJI_NAME} from "../constants/interaction-constants";
+import {OmiliaDuration} from "../utils/omilia-duration";
 import {OmiliaSession} from "./omilia-session";
 
 export class Formatter {
@@ -15,7 +16,7 @@ export class Formatter {
     public static getSessionStatusMessage(session: OmiliaSession): string {
         let timeWindowStr = "infinite";
         if (session.settings.timeWindowDuration) {
-            timeWindowStr = Formatter.formatMsTime(session.settings.timeWindowDuration);
+            timeWindowStr = session.settings.timeWindowDuration.toString();
         }
         return "🪐 **Live Session** 🪐\n\n" +
             "**`○ next up`** 🎙️\n" +
@@ -24,7 +25,7 @@ export class Formatter {
             `\`○ settings:\`\n` +
             // tslint:disable-next-line:max-line-length
             `  ${Formatter.formatAttributeWithBadge("time window", timeWindowStr)}\n` +
-            `  ${Formatter.formatAttributeWithBadge("refresh delay", Formatter.formatMsTime(session.settings.refreshDelay))}\n` +
+            `  ${Formatter.formatAttributeWithBadge("refresh delay", session.settings.refreshDelay.toString())}\n` +
             "\n" +
             `To speak, react with ${REQUEST_TO_SPEAK_EMOJI}`;
     }
@@ -47,7 +48,7 @@ export class Formatter {
             `• ${HELP_CMD}: well uhm...\n` +
             `• ${START_MONITORING_CMD}: start monitoring a conversation\n` +
             `  ○ arguments:\n` +
-            `    ${TIME_WINDOW_DURATION}: how long ago an intervention can be taken into acount\n` +
+            `    ${TIME_WINDOW_DURATION}: how old an intervention can be to be taken into account\n` +
             `    ${STATUS_MESSAGE_REFRESH_DELAY}: time interval between every refresh\n` +
             `• ${LEAVE_CMD}: to make me leave the channel\n` +
             `• ${STOP_CMD}: same as ${LEAVE_CMD}\n` +
@@ -71,20 +72,6 @@ export class Formatter {
         return detailsMessage;
     }
 
-    public static formatMsTime(speakerTime: number): string {
-        const date = new Date(speakerTime).toISOString().substr(11, 8);
-        const timeUnits = date.split(":");
-        const unitStrs = ["h", "m", "s"];
-        const displayStrings = [];
-        timeUnits.forEach((unitStr, idx) => {
-            const unit = Number(unitStr);
-            if ((unit)) {
-                displayStrings.push(`${unit}${unitStrs[idx]}`);
-            }
-        });
-        return displayStrings.join(" ");
-    }
-
     private static formatAttributeWithBadge(badge: string, value: string, bold: boolean = false): string {
         let boldifier = "";
         if (bold) {
@@ -101,7 +88,7 @@ export class Formatter {
         }
 
         speakerTimes.forEach(([userId, speakerTime], idx) => {
-            speakerBoard += `  ${this.formatAttributeWithBadge(`${idx + 1}`, `${session.getGuildMemberFromId(userId).user.username} ${Formatter.formatMsTime(speakerTime)}`, true)}\n`;
+            speakerBoard += `  ${this.formatAttributeWithBadge(`${idx + 1}`, `${session.getGuildMemberFromId(userId).user.username} ${new OmiliaDuration(speakerTime).toString()}`, true)}\n`;
         });
         return speakerBoard;
     }
