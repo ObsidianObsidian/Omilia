@@ -7,7 +7,11 @@ import {
     TIME_WINDOW_DURATION,
 } from "../constants/command-constants";
 import {DEPENDENCIES, REPO_URL} from "../constants/info-constants";
-import {REQUEST_TO_SPEAK_EMOJI, REQUEST_TO_SPEAK_EMOJI_NAME} from "../constants/interaction-constants";
+import {
+    HIDE_NAME_ON_SPEAKERBOARD_EMOJI,
+    PAUSE_COUNTS_EMOJI,
+    REQUEST_TO_SPEAK_EMOJI,
+} from "../constants/interaction-constants";
 import {OmiliaDuration} from "../utils/omilia-duration";
 import {OmiliaSession} from "./omilia-session";
 
@@ -23,13 +27,15 @@ export class Formatter {
             Formatter.getSpeakerBoard(session, session.getSortedCandidateSpeakerTimes()) +
             "\n\n" +
             "**`○ Speaker Times`** 💞\n" +
-            Formatter.getSpeakerBoard(session, session.getSortedSpeakerTimes()) +
-            "\n" +
+            Formatter.getSpeakerBoard(session, session.getSortedVisibleSpeakerTimes()) +
+            "\n\n" +
             `\`○ settings:\`\n` +
             `  ${Formatter.formatAttributeWithBadge("time window", timeWindowStr)}\n` +
             `  ${Formatter.formatAttributeWithBadge("refresh delay", session.settings.refreshDelay.toString())}\n` +
             "\n" +
-            `To speak, react with ${REQUEST_TO_SPEAK_EMOJI}`;
+            `To speak, react with "${REQUEST_TO_SPEAK_EMOJI}"\n` +
+            `To hide your name from the speaker, react with "${HIDE_NAME_ON_SPEAKERBOARD_EMOJI}"\n` +
+            `To stop counting your own interventions, react with "${PAUSE_COUNTS_EMOJI}"`;
     }
 
     public static getHelpMessage(): string {
@@ -42,7 +48,7 @@ export class Formatter {
             `**\`how to use\`**\n` +
             `\`\`\`\n` +
             `• Start monitoring your conversations with "${COMMAND_PREFIX} ${START_MONITORING_CMD}" (with optional parameters).\n` +
-            `• React with ${REQUEST_TO_SPEAK_EMOJI_NAME} on my status message when you are ready to speak.\n` +
+            `• React with ${REQUEST_TO_SPEAK_EMOJI} on my status message when you are ready to speak.\n` +
             `• Stop monitoring a conversation with "${STOP_CMD}" or "${LEAVE_CMD}".\n` +
             `\`\`\`\n` +
             `**\`commands\`**\n` +
@@ -85,11 +91,11 @@ export class Formatter {
     private static getSpeakerBoard(session: OmiliaSession, speakerTimes: Array<[string, number]>): string {
         let speakerBoard = "";
         if (speakerTimes.length === 0) {
-            return `  only emptiness... react with ${REQUEST_TO_SPEAK_EMOJI} to speak!`;
+            return `  hello darkness...`;
         }
 
         speakerTimes.forEach(([userId, speakerTime], idx) => {
-            speakerBoard += `  ${this.formatAttributeWithBadge(`${idx + 1}`, `${session.getGuildMemberFromId(userId).user.username} ${new OmiliaDuration(speakerTime).toString()}`, true)}\n`;
+            speakerBoard += `  ${this.formatAttributeWithBadge(`${idx + 1}`, `${session.getGuildMemberFromId(userId).user.username} ${new OmiliaDuration(speakerTime).toString()}`, true)}`;
         });
         return speakerBoard;
     }

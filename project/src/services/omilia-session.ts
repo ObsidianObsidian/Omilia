@@ -5,13 +5,25 @@ const {joinVoiceChannel} = require("@discordjs/voice");
 import {VoiceConnection} from "@discordjs/voice";
 import {Subject, timer} from "rxjs";
 import {Observable, Subscription} from "rxjs/dist/types";
-import {REQUEST_TO_SPEAK_EMOJI} from "../constants/interaction-constants";
+import {
+    HIDE_NAME_ON_SPEAKERBOARD_EMOJI,
+    PAUSE_COUNTS_EMOJI,
+    REQUEST_TO_SPEAK_EMOJI,
+} from "../constants/interaction-constants";
 import {InactivityTimeoutError, notifyOmiliaError, NotInVoiceChannelError} from "../constants/omilia-error";
 import {SessionSettings} from "../interfaces/session-settings";
 import {Formatter} from "./formatter";
 import {VoiceTracker} from "./voice-tracker";
 
 export class OmiliaSession {
+
+    public get settings(): SessionSettings {
+        return this.voiceTracker.settings;
+    }
+
+    private get humanVoiceChannelMembers(): Collection<Snowflake, GuildMember> {
+        return this.voiceChannel.members.filter((member) => !member.user.bot);
+    }
     private activationMessage: Message;
     private statusMessages: Message[] = [];
 
@@ -22,6 +34,8 @@ export class OmiliaSession {
     private refreshMessageSubscription: Subscription | null;
     private inactivityTimeoutSubscription: Subscription | null;
     private candidateSpeakers = new Set<string>();
+    private hiddenSpeakers = new Set<string>();
+
     private endSubject = new Subject<void>();
 
     constructor(activationMessage: Message) {
@@ -29,13 +43,9 @@ export class OmiliaSession {
     }
 
     public getCandidateSpeakersInChannel(): Set<string> {
-        const speakersInChannel = new Set<string>();
-        this.candidateSpeakers.forEach((candidateId) => {
-            if (this.humanVoiceChannelMembers.has(candidateId)) {
-                speakersInChannel.add(candidateId);
-            }
-        });
-        return speakersInChannel;
+        const speakersInChannel = Array.from(this.humanVoiceChannelMembers.keys())
+            .filter((channelMember) => this.candidateSpeakers.has(channelMember));
+        return new Set<string>(speakersInChannel);
     }
 
     public getEndObservable(): Observable<void> {
@@ -56,10 +66,6 @@ export class OmiliaSession {
         await this.setup();
     }
 
-    public get settings(): SessionSettings {
-        return this.voiceTracker.settings;
-    }
-
     public end() {
         if (this.voiceConnection) {
             this.voiceConnection.destroy();
@@ -72,6 +78,14 @@ export class OmiliaSession {
 
     public setCandidateSpeakers(candidateSpeakers: string[]): void {
         this.candidateSpeakers = new Set<string>(candidateSpeakers);
+    }
+
+    public setHiddenSpeakers(hiddenSpeakers: string[]): void {
+        this.hiddenSpeakers = new Set<string>(hiddenSpeakers);
+    }
+
+    public onPrivilegedSpeakersChange(privilegedSpeakers: string[]): void {
+        this.voiceTracker.setPrivilegedSpeakers(privilegedSpeakers);
     }
 
     public getStatusMessagesIds(): string[] {
@@ -90,8 +104,8 @@ export class OmiliaSession {
         return this.getSortedSpeakerTimes().filter(([userId, _]) => this.getCandidateSpeakersInChannel().has(userId));
     }
 
-    private get humanVoiceChannelMembers(): Collection<Snowflake, GuildMember> {
-        return this.voiceChannel.members.filter((member) => !member.user.bot);
+    public getSortedVisibleSpeakerTimes(): Array<[string, number]> {
+        return this.getSortedSpeakerTimes().filter(([userId, _]) => !this.hiddenSpeakers.has(userId));
     }
 
     public getSortedSpeakerTimes(): Array<[string, number]> {
@@ -118,6 +132,8 @@ export class OmiliaSession {
     private registerStatusMessage(message: Message): void {
         this.statusMessages.push(message);
         message.react(REQUEST_TO_SPEAK_EMOJI);
+        message.react(HIDE_NAME_ON_SPEAKERBOARD_EMOJI);
+        message.react(PAUSE_COUNTS_EMOJI);
     }
 
     private async joinUserChannel(): Promise<VoiceChannel | null> {

@@ -26,11 +26,11 @@ client.on("messageCreate", (message: Message) => {
 });
 
 client.on("messageReactionAdd", (reaction) => {
-    Orchestrator.onMessageReaction(reaction);
+    Orchestrator.onMessageReactionChange(reaction);
 });
 
 client.on("messageReactionRemove", (reaction) => {
-    Orchestrator.onMessageReaction(reaction);
+    Orchestrator.onMessageReactionChange(reaction);
 });
 
 function onMessageCreate(message: Message): void {

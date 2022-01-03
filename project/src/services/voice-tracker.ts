@@ -15,6 +15,7 @@ export class VoiceTracker {
 
     private inactivityTimeoutSubject = new Subject<void>();
     private timeoutTimerSubscription: Subscription | null;
+    private privilegedSpeakers = new Set<string>();
 
     constructor(voiceConnection: VoiceConnection, settings: SessionSettings | null) {
         this.voiceConnection = voiceConnection;
@@ -54,6 +55,13 @@ export class VoiceTracker {
         this.timeoutTimerSubscription.unsubscribe();
     }
 
+    public setPrivilegedSpeakers(privilegedSpeakers: string[]): void {
+        const addedPrivilegedSpeakers = privilegedSpeakers
+            .filter((speakerId) => !this.privilegedSpeakers.has(speakerId));
+        this.privilegedSpeakers = new Set<string>(privilegedSpeakers);
+        this.onPrivilegedSpeakersChange(addedPrivilegedSpeakers);
+    }
+
     private setup(): void {
         this.voiceConnection.receiver.speaking.on("start", ((userId) => {
             this.refreshInactivityTimeoutTimer();
@@ -75,7 +83,7 @@ export class VoiceTracker {
     }
 
     private onStopSpeaking(userId: string): void {
-        if (!this.latestVoiceStartTimes.has(userId)) { // user was never seen starting
+        if (this.privilegedSpeakers.has(userId) || !this.latestVoiceStartTimes.has(userId)) {
             return;
         }
         const end = Date.now();
@@ -95,5 +103,11 @@ export class VoiceTracker {
         this.timeoutTimerSubscription = timer(MAXIMUM_INACTIVITY_THRESHOLD).subscribe(() => {
             this.inactivityTimeoutSubject.next();
         });
+    }
+
+    private onPrivilegedSpeakersChange(addedPrivilegedSpeakers: string[]): void {
+        for (const addedPrivilegedSpeaker of addedPrivilegedSpeakers) {
+            this.onStopSpeaking(addedPrivilegedSpeaker);
+        }
     }
 }

@@ -1,5 +1,9 @@
 import {Message, MessageReaction, PartialMessageReaction} from "discord.js";
-import {REQUEST_TO_SPEAK_EMOJI, REQUEST_TO_SPEAK_EMOJI_NAME} from "../constants/interaction-constants";
+import {
+    HIDE_NAME_ON_SPEAKERBOARD_EMOJI,
+    PAUSE_COUNTS_EMOJI,
+    REQUEST_TO_SPEAK_EMOJI,
+} from "../constants/interaction-constants";
 import {AlreadyDisconnectedError, notifyOmiliaError, SessionAlreadyActiveError} from "../constants/omilia-error";
 import {SessionSettings} from "../interfaces/session-settings";
 import {OmiliaStatusMessageMap} from "../utils/omilia-status-message-map";
@@ -42,9 +46,15 @@ export class Orchestrator {
         this.statusMessageTrackerMap.deleteSession(session);
     }
 
-    public static onMessageReaction(reaction: MessageReaction | PartialMessageReaction): void {
+    // tslint:disable-next-line:max-line-length
+    public static onMessageReactionChange(reaction: MessageReaction | PartialMessageReaction): void {
         const targetMessageId = reaction.message.id;
-        const isOmiliaEmoji = [REQUEST_TO_SPEAK_EMOJI, REQUEST_TO_SPEAK_EMOJI_NAME].includes(reaction.emoji.name);
+        const isOmiliaEmoji =
+            [
+                REQUEST_TO_SPEAK_EMOJI,
+                HIDE_NAME_ON_SPEAKERBOARD_EMOJI,
+                PAUSE_COUNTS_EMOJI,
+            ].includes(reaction.emoji.name);
         const isOnOmiliaMessage = this.statusMessageTrackerMap.hasMessage(targetMessageId);
         if (!isOmiliaEmoji || !isOnOmiliaMessage) {
             return;
@@ -52,7 +62,18 @@ export class Orchestrator {
 
         const session = this.statusMessageTrackerMap.getSessionFromMessageId(reaction.message.id);
         reaction.users.fetch().then((users) => {
-            session.setCandidateSpeakers(users.filter((user) => !user.bot).map((user) => user.id));
+            const usersWhoReacted = users.filter((user) => !user.bot).map((user) => user.id);
+            switch (reaction.emoji.name) {
+                case REQUEST_TO_SPEAK_EMOJI:
+                    session.setCandidateSpeakers(usersWhoReacted);
+                    break;
+                case HIDE_NAME_ON_SPEAKERBOARD_EMOJI:
+                    session.setHiddenSpeakers(usersWhoReacted);
+                    break;
+                case PAUSE_COUNTS_EMOJI:
+                    session.onPrivilegedSpeakersChange(usersWhoReacted);
+            }
+
         });
     }
 
