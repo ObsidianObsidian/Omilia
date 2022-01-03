@@ -1,4 +1,4 @@
-import {GuildMember, Message, VoiceChannel} from "discord.js";
+import {Collection, GuildMember, Message, Snowflake, VoiceChannel} from "discord.js";
 
 // tslint:disable-next-line:no-var-requires
 const {joinVoiceChannel} = require("@discordjs/voice");
@@ -16,7 +16,7 @@ export class OmiliaSession {
     private statusMessages: Message[] = [];
 
     private voiceConnection: VoiceConnection | null;
-    private userChannel: VoiceChannel | null;
+    private voiceChannel: VoiceChannel | null;
     private voiceTracker: VoiceTracker | null;
 
     private refreshMessageSubscription: Subscription | null;
@@ -31,7 +31,7 @@ export class OmiliaSession {
     public getCandidateSpeakersInChannel(): Set<string> {
         const speakersInChannel = new Set<string>();
         this.candidateSpeakers.forEach((candidateId) => {
-            if (this.userChannel.members.has(candidateId)) {
+            if (this.humanVoiceChannelMembers.has(candidateId)) {
                 speakersInChannel.add(candidateId);
             }
         });
@@ -44,7 +44,7 @@ export class OmiliaSession {
 
     public async start(settings: SessionSettings) {
         try {
-            this.userChannel = await this.joinUserChannel();
+            this.voiceChannel = await this.joinUserChannel();
         } catch (e) {
             notifyOmiliaError(e, this.activationMessage.channel);
         }
@@ -79,7 +79,7 @@ export class OmiliaSession {
     }
 
     public getGuildMemberFromId(userId: string): GuildMember | null {
-        return this.userChannel.members.get(userId);
+        return this.voiceChannel.members.get(userId);
     }
 
     public getGuildId(): string {
@@ -87,14 +87,18 @@ export class OmiliaSession {
     }
 
     public getSortedCandidateSpeakerTimes(): Array<[string, number]> {
-        const speakerTimes: Array<[string, number]> = [];
-        for (const candidateSpeakerId of this.getCandidateSpeakersInChannel()) {
-            speakerTimes.push([candidateSpeakerId, this.voiceTracker.getUserRelevantSpeakTime(candidateSpeakerId)]);
-        }
-        speakerTimes.sort(([aId, aTime], [bId, bTime]) => {
-            return aTime - bTime;
-        });
-        return speakerTimes;
+        return this.getSortedSpeakerTimes().filter(([userId, _]) => this.getCandidateSpeakersInChannel().has(userId));
+    }
+
+    private get humanVoiceChannelMembers(): Collection<Snowflake, GuildMember> {
+        return this.voiceChannel.members.filter((member) => !member.user.bot);
+    }
+
+    public getSortedSpeakerTimes(): Array<[string, number]> {
+        const speakerTimes: Array<[string, number]> = Array.from(this.humanVoiceChannelMembers.keys())
+            .map((candidateSpeakerId) =>
+                [candidateSpeakerId, this.voiceTracker.getUserRelevantSpeakTime(candidateSpeakerId)]);
+        return speakerTimes.sort(([_, aTime], [__, bTime]) => aTime - bTime);
     }
 
     private async setup(): Promise<void> {

@@ -20,10 +20,12 @@ export class Formatter {
         }
         return "🪐 **Live Session** 🪐\n\n" +
             "**`○ next up`** 🎙️\n" +
-            Formatter.getSpeakerBoard(session) +
+            Formatter.getSpeakerBoard(session, session.getSortedCandidateSpeakerTimes()) +
             "\n\n" +
+            "**`○ Speaker Times`** 💞\n" +
+            Formatter.getSpeakerBoard(session, session.getSortedSpeakerTimes()) +
+            "\n" +
             `\`○ settings:\`\n` +
-            // tslint:disable-next-line:max-line-length
             `  ${Formatter.formatAttributeWithBadge("time window", timeWindowStr)}\n` +
             `  ${Formatter.formatAttributeWithBadge("refresh delay", session.settings.refreshDelay.toString())}\n` +
             "\n" +
@@ -80,8 +82,7 @@ export class Formatter {
         return `${boldifier}\`• ${badge}\`${boldifier} ${value}`;
     }
 
-    private static getSpeakerBoard(session: OmiliaSession): string {
-        const speakerTimes = session.getSortedCandidateSpeakerTimes();
+    private static getSpeakerBoard(session: OmiliaSession, speakerTimes: Array<[string, number]>): string {
         let speakerBoard = "";
         if (speakerTimes.length === 0) {
             return `  only emptiness... react with ${REQUEST_TO_SPEAK_EMOJI} to speak!`;
