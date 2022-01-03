@@ -6,7 +6,7 @@ import {VoiceConnection} from "@discordjs/voice";
 import {Subject, timer} from "rxjs";
 import {Observable, Subscription} from "rxjs/dist/types";
 import {
-    HIDE_NAME_ON_SPEAKERBOARD_EMOJI,
+    HIDE_IN_SPEAKER_BOARD_EMOJI,
     PAUSE_COUNTS_EMOJI,
     REQUEST_TO_SPEAK_EMOJI,
 } from "../constants/interaction-constants";
@@ -115,6 +115,11 @@ export class OmiliaSession {
         return speakerTimes.sort(([_, aTime], [__, bTime]) => aTime - bTime);
     }
 
+    public getPrivilegedSpeakersInChannel(): string[] {
+        return Array.from(this.voiceTracker.getPrivilegedSpeakers())
+            .filter((userId) => this.voiceChannel.members.has(userId));
+    }
+
     private async setup(): Promise<void> {
         // @ts-ignore
         await this.activationMessage.channel.send(Formatter.getSessionStatusMessage(this))
@@ -132,7 +137,7 @@ export class OmiliaSession {
     private registerStatusMessage(message: Message): void {
         this.statusMessages.push(message);
         message.react(REQUEST_TO_SPEAK_EMOJI);
-        message.react(HIDE_NAME_ON_SPEAKERBOARD_EMOJI);
+        message.react(HIDE_IN_SPEAKER_BOARD_EMOJI);
         message.react(PAUSE_COUNTS_EMOJI);
     }
 

@@ -8,7 +8,7 @@ import {
 } from "../constants/command-constants";
 import {DEPENDENCIES, REPO_URL} from "../constants/info-constants";
 import {
-    HIDE_NAME_ON_SPEAKERBOARD_EMOJI,
+    HIDE_IN_SPEAKER_BOARD_EMOJI,
     PAUSE_COUNTS_EMOJI,
     REQUEST_TO_SPEAK_EMOJI,
 } from "../constants/interaction-constants";
@@ -22,20 +22,28 @@ export class Formatter {
         if (session.settings.timeWindowDuration) {
             timeWindowStr = session.settings.timeWindowDuration.toString();
         }
+
+        let privilegedSpeakerBoard = "";
+        if (session.getPrivilegedSpeakersInChannel().length) {
+            privilegedSpeakerBoard =
+                `**\`○ unmonitored speakers\`** ${PAUSE_COUNTS_EMOJI}\n  ` +
+                Formatter.getPrivilegedSpeakersBoard(session, session.getPrivilegedSpeakersInChannel()) + "\n\n";
+        }
         return "🪐 **Live Session** 🪐\n\n" +
             "**`○ next up`** 🎙️\n" +
             Formatter.getSpeakerBoard(session, session.getSortedCandidateSpeakerTimes()) +
-            "\n\n" +
-            "**`○ Speaker Times`** 💞\n" +
-            Formatter.getSpeakerBoard(session, session.getSortedVisibleSpeakerTimes()) +
-            "\n\n" +
+            "\n" +
+            "**`○ speaker times`** 💞\n" +
+            Formatter.getSpeakerBoard(session, session.getSortedVisibleSpeakerTimes()) + "\n" +
+            privilegedSpeakerBoard +
             `\`○ settings:\`\n` +
             `  ${Formatter.formatAttributeWithBadge("time window", timeWindowStr)}\n` +
             `  ${Formatter.formatAttributeWithBadge("refresh delay", session.settings.refreshDelay.toString())}\n` +
             "\n" +
-            `To speak, react with "${REQUEST_TO_SPEAK_EMOJI}"\n` +
-            `To hide your name from the speaker, react with "${HIDE_NAME_ON_SPEAKERBOARD_EMOJI}"\n` +
-            `To stop counting your own interventions, react with "${PAUSE_COUNTS_EMOJI}"`;
+            `\`○ actions:\`\n` +
+            `  ${Formatter.formatAttributeWithBadge("request to speak", `${REQUEST_TO_SPEAK_EMOJI}`)}\n` +
+            `  ${Formatter.formatAttributeWithBadge("hide from speaker board", `${HIDE_IN_SPEAKER_BOARD_EMOJI}`)}\n` +
+            `  ${Formatter.formatAttributeWithBadge("stop being monitored", `${PAUSE_COUNTS_EMOJI}`)}\n`;
     }
 
     public static getHelpMessage(): string {
@@ -91,12 +99,17 @@ export class Formatter {
     private static getSpeakerBoard(session: OmiliaSession, speakerTimes: Array<[string, number]>): string {
         let speakerBoard = "";
         if (speakerTimes.length === 0) {
-            return `  hello darkness...`;
+            return `  none\n`;
         }
 
         speakerTimes.forEach(([userId, speakerTime], idx) => {
-            speakerBoard += `  ${this.formatAttributeWithBadge(`${idx + 1}`, `${session.getGuildMemberFromId(userId).user.username} ${new OmiliaDuration(speakerTime).toString()}`, true)}`;
+            speakerBoard += `  ${this.formatAttributeWithBadge(`${idx + 1}`, `${session.getGuildMemberFromId(userId).displayName} ${new OmiliaDuration(speakerTime).toString()}`, true)}\n`;
         });
         return speakerBoard;
+    }
+
+    private static getPrivilegedSpeakersBoard(session: OmiliaSession, speakerIds: string[]): string {
+        const speakerDisplayNames = speakerIds.map((speakerId) => session.getGuildMemberFromId(speakerId).displayName);
+        return speakerDisplayNames.join(", ");
     }
 }

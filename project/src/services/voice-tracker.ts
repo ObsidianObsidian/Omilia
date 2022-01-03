@@ -62,6 +62,10 @@ export class VoiceTracker {
         this.onPrivilegedSpeakersChange(addedPrivilegedSpeakers);
     }
 
+    public getPrivilegedSpeakers(): Set<string> {
+        return this.privilegedSpeakers;
+    }
+
     private setup(): void {
         this.voiceConnection.receiver.speaking.on("start", ((userId) => {
             this.refreshInactivityTimeoutTimer();

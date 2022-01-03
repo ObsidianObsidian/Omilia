@@ -1,6 +1,6 @@
 import {Message, MessageReaction, PartialMessageReaction} from "discord.js";
 import {
-    HIDE_NAME_ON_SPEAKERBOARD_EMOJI,
+    HIDE_IN_SPEAKER_BOARD_EMOJI,
     PAUSE_COUNTS_EMOJI,
     REQUEST_TO_SPEAK_EMOJI,
 } from "../constants/interaction-constants";
@@ -52,7 +52,7 @@ export class Orchestrator {
         const isOmiliaEmoji =
             [
                 REQUEST_TO_SPEAK_EMOJI,
-                HIDE_NAME_ON_SPEAKERBOARD_EMOJI,
+                HIDE_IN_SPEAKER_BOARD_EMOJI,
                 PAUSE_COUNTS_EMOJI,
             ].includes(reaction.emoji.name);
         const isOnOmiliaMessage = this.statusMessageTrackerMap.hasMessage(targetMessageId);
@@ -67,7 +67,7 @@ export class Orchestrator {
                 case REQUEST_TO_SPEAK_EMOJI:
                     session.setCandidateSpeakers(usersWhoReacted);
                     break;
-                case HIDE_NAME_ON_SPEAKERBOARD_EMOJI:
+                case HIDE_IN_SPEAKER_BOARD_EMOJI:
                     session.setHiddenSpeakers(usersWhoReacted);
                     break;
                 case PAUSE_COUNTS_EMOJI:
