@@ -10,6 +10,7 @@ export interface DevDependency {
 export const DEPENDENCIES: DevDependency[] = [
     {name: "nodejs", website: "https://nodejs.org/en", license: "MIT"},
     {name: "discordjs", website: "https://discord.js.org", license: "Apache-2.0"},
+    {name: "play-dl", website: "https://www.npmjs.com/package/play-dl", license: "GPL-3.0"},
     {name: "dotenv", website: "https://www.npmjs.com/package/dotenv", license: "BSD-2-Clause"},
     {name: "rxjs", website: "https://www.npmjs.com/package/rxjs", license: "Apache-2.0"},
 ];

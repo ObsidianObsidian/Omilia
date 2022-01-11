@@ -5,14 +5,19 @@
   "main": "src/app.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon src/app.ts"
+    "dev": "nodemon src/app.ts",
+    "start": "ts-node src/app.ts"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@discordjs/opus": "github:discordjs/opus",
     "@discordjs/voice": "^0.7.5",
     "discord.js": "^13.4.0",
     "dotenv": "^10.0.0",
+    "ffmpeg-static": "^4.4.1",
+    "libsodium-wrappers": "^0.7.9",
+    "play-dl": "^1.7.8",
     "rxjs": "^7.5.1"
   },
   "devDependencies": {

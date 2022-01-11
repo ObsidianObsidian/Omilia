@@ -1,4 +1,4 @@
-import {InvalidTimeFormatError} from "../constants/omilia-error";
+import {InvalidTimeFormatError} from "../constants/omilia-errors";
 
 export class OmiliaDuration {
 

@@ -6,12 +6,13 @@ import {
     START_MONITORING_CMD, STATUS_MESSAGE_REFRESH_DELAY,
     STOP_CMD, TIME_WINDOW_DURATION,
 } from "../constants/command-constants";
+import {MESSAGE_HAS_BEEN_NOTICED_EMOJI} from "../constants/interaction-constants";
 import {
     InvalidCommandFormatError,
     NoValueProvidedForArgumentError,
     UnknownArgumentError,
     UnknownCommandError,
-} from "../constants/omilia-error";
+} from "../constants/omilia-errors";
 import {DEFAULT_SESSION_REFRESH_DELAY, MINIMUM_REFRESH_DELAY} from "../constants/session-constants";
 import {SessionSettings} from "../interfaces/session-settings";
 import {OmiliaDuration} from "../utils/omilia-duration";
@@ -21,7 +22,7 @@ import {Orchestrator} from "./orchestrator";
 export class CommandManager {
 
     public static onBotCommand(message: Message): void {
-        message.react("☑️");
+        message.react(MESSAGE_HAS_BEEN_NOTICED_EMOJI);
         if (!CommandManager.isValidCommandFormat(message.content)) {
             throw new InvalidCommandFormatError(message.content);
         }

@@ -4,7 +4,7 @@ import {
     PAUSE_COUNTS_EMOJI,
     REQUEST_TO_SPEAK_EMOJI,
 } from "../constants/interaction-constants";
-import {AlreadyDisconnectedError, notifyOmiliaError, SessionAlreadyActiveError} from "../constants/omilia-error";
+import {AlreadyDisconnectedError, notifyOmiliaError, SessionAlreadyActiveError} from "../constants/omilia-errors";
 import {SessionSettings} from "../interfaces/session-settings";
 import {OmiliaStatusMessageMap} from "../utils/omilia-status-message-map";
 import {OmiliaSession} from "./omilia-session";
@@ -21,7 +21,6 @@ export class Orchestrator {
         if (Orchestrator.sessions.has(activationMessage.guildId)) {
             throw new SessionAlreadyActiveError();
         }
-
         const session = new OmiliaSession(activationMessage);
         session.start(sessionSettings).then(() => {
             const sub = session.getEndObservable().subscribe(() => {
@@ -65,15 +64,14 @@ export class Orchestrator {
             const usersWhoReacted = users.filter((user) => !user.bot).map((user) => user.id);
             switch (reaction.emoji.name) {
                 case REQUEST_TO_SPEAK_EMOJI:
-                    session.setCandidateSpeakers(usersWhoReacted);
+                    session.onCandidateSpeakersChange(usersWhoReacted);
                     break;
                 case HIDE_IN_SPEAKER_BOARD_EMOJI:
-                    session.setHiddenSpeakers(usersWhoReacted);
+                    session.onHiddenSpeakersChange(usersWhoReacted);
                     break;
                 case PAUSE_COUNTS_EMOJI:
                     session.onPrivilegedSpeakersChange(usersWhoReacted);
             }
-
         });
     }
 
