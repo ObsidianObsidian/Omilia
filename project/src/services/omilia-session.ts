@@ -16,7 +16,7 @@ import {
 import {InactivityTimeoutError, notifyOmiliaError, NotInVoiceChannelError} from "../constants/omilia-errors";
 import {SessionSettings} from "../interfaces/session-settings";
 import {Formatter} from "./formatter";
-import {VoiceTracker} from "./voice-tracker";
+import {ActivityTracker} from "./activity-tracker";
 
 // tslint:disable-next-line:no-var-requires
 const {joinVoiceChannel} = require("@discordjs/voice");
@@ -37,7 +37,7 @@ export class OmiliaSession {
     private voiceConnection: VoiceConnection | null;
     private audioPlayer = createAudioPlayer({behaviors: {noSubscriber: NoSubscriberBehavior.Stop}});
     private voiceChannel: VoiceChannel | null;
-    private voiceTracker: VoiceTracker | null;
+    private voiceTracker: ActivityTracker | null;
 
     private refreshMessageSubscription: Subscription | null;
     private inactivityTimeoutSubscription: Subscription | null;
@@ -67,7 +67,7 @@ export class OmiliaSession {
             notifyOmiliaError(e, this.activationMessage.channel);
         }
         this.voiceConnection.subscribe(this.audioPlayer);
-        this.voiceTracker = new VoiceTracker(this.voiceConnection, settings);
+        this.voiceTracker = new ActivityTracker(this.voiceConnection, settings);
         this.inactivityTimeoutSubscription = this.voiceTracker.getInactivityTimeoutObservable().subscribe(() => {
             notifyOmiliaError(new InactivityTimeoutError(), this.activationMessage.channel);
             this.end();
