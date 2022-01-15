@@ -5,13 +5,14 @@ import {Observable, Subscription} from "rxjs/dist/types";
 import {MAXIMUM_INACTIVITY_THRESHOLD} from "../constants/session-constants";
 import {SessionSettings} from "../interfaces/session-settings";
 import {InterventionsRecord} from "./InterventionsRecord";
+import {SpeakerScore} from "./speaker-score/speaker-score";
 
 export class ChannelActivityTracker {
     public settings: SessionSettings;
     private voiceConnection: VoiceConnection;
     private voiceChannel: VoiceChannel;
-    private connectionsRecord: InterventionsRecord;
-    private voiceInterventionsRecord: InterventionsRecord;
+    private readonly connectionsRecord: InterventionsRecord;
+    private readonly voiceInterventionsRecord: InterventionsRecord;
 
     private inactivityTimeoutSubject = new Subject<void>();
     private timeoutTimerSubscription: Subscription | null;
@@ -20,13 +21,14 @@ export class ChannelActivityTracker {
         this.voiceChannel = voiceChannel;
         this.voiceConnection = voiceConnection;
         this.settings = settings;
-        this.connectionsRecord = new InterventionsRecord();
-        this.voiceInterventionsRecord = new InterventionsRecord(settings.timeWindowDuration?.valueOf());
+        this.connectionsRecord = new InterventionsRecord(settings);
+        this.voiceInterventionsRecord = new InterventionsRecord(settings);
+        this.settings.speakerScorer.init(this.connectionsRecord, this.voiceInterventionsRecord);
         this.start();
     }
 
-    public getUserRelevantSpeakTime(userId: string): number {
-        return this.voiceInterventionsRecord.getMemberRelevantInterventionTime(userId); // TODO implement options for other units;
+    public getUserRelevantScore(userId: string): SpeakerScore {
+        return this.settings.speakerScorer.getSpeakerScore(userId);
     }
 
     public getInactivityTimeoutObservable(): Observable<void> {

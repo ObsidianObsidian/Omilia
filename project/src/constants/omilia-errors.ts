@@ -1,6 +1,13 @@
 import {GuildTextBasedChannel, If, TextBasedChannel} from "discord.js";
 import {OmiliaDuration} from "../utils/omilia-duration";
-import {AVAILABLE_COMMAND_ARGS, AVAILABLE_COMMANDS, COMMAND_PREFIX, LEAVE_CMD, STOP_CMD} from "./command-constants";
+import {
+    ARG_TO_SCORING_MODE,
+    AVAILABLE_COMMAND_ARGS,
+    AVAILABLE_COMMANDS,
+    COMMAND_PREFIX,
+    LEAVE_CMD,
+    STOP_CMD,
+} from "./command-constants";
 import {MAXIMUM_INACTIVITY_THRESHOLD} from "./session-constants";
 
 export class OmiliaErrors extends Error {
@@ -44,6 +51,14 @@ export class InvalidTimeFormatError extends OmiliaErrors {
         super(`"${formattedTime}" is not a valid duration/time.\n`
             + `Please use a format along these lines:\n`
             + `\`1h40m15s\` | \`1h40s\` | \`90m80s\` | \`120s\``);
+    }
+}
+
+export class InvalidScorerOptionError extends OmiliaErrors {
+    constructor(arg: string) {
+        super(`"${arg}" is not a valid scoring option.\n`
+            + `Please use one of the following options:\n`
+            + `\`${Array.from(ARG_TO_SCORING_MODE.keys()).join("\` | \`")}\``);
     }
 }
 

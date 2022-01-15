@@ -1,4 +1,5 @@
 export abstract class SpeakerScore {
+
     protected readonly scoreVal: number;
 
     constructor(scoreVal: number) {

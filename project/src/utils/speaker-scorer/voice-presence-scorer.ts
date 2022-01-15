@@ -7,4 +7,8 @@ export class VoicePresenceScorer extends SpeakerScorer {
         const totalSpeakerTime = this.voiceInterventionsRecord.getMemberRelevantInterventionTime(userId);
         return new VoicePresenceScore( totalSpeakerTime / memberPresenceTime);
     }
+
+    public getScoreModeName(): string {
+        return "voice presence";
+    }
 }

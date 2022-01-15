@@ -7,4 +7,8 @@ export class TotalTimeScorer extends SpeakerScorer {
         return new TotalTimeScore(interventionTime);
     }
 
+    public getScoreModeName(): string {
+        return "total time";
+    }
+
 }

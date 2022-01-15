@@ -2,7 +2,7 @@ import {Message} from "discord.js";
 import {
     COMMAND_PREFIX, DETAILS_CMD,
     HELP_CMD,
-    LEAVE_CMD,
+    LEAVE_CMD, SCORING_MODE,
     START_MONITORING_CMD, STATUS_MESSAGE_REFRESH_DELAY,
     STOP_CMD, TIME_WINDOW_DURATION,
 } from "../constants/command-constants";
@@ -13,9 +13,13 @@ import {
     UnknownArgumentError,
     UnknownCommandError,
 } from "../constants/omilia-errors";
-import {DEFAULT_SESSION_REFRESH_DELAY, MINIMUM_REFRESH_DELAY} from "../constants/session-constants";
+import {
+    getDefaultSessionSettings,
+    MINIMUM_REFRESH_DELAY,
+} from "../constants/session-constants";
 import {SessionSettings} from "../interfaces/session-settings";
 import {OmiliaDuration} from "../utils/omilia-duration";
+import {SpeakerScorer} from "../utils/speaker-scorer/speaker-scorer";
 import {Formatter} from "./formatter";
 import {Orchestrator} from "./orchestrator";
 
@@ -71,7 +75,7 @@ export class CommandManager {
     }
 
     private static extractSessionSettingsFromArgs(args: string[]): SessionSettings {
-        const sessionSettings: SessionSettings = {refreshDelay: new OmiliaDuration(DEFAULT_SESSION_REFRESH_DELAY)};
+        const sessionSettings: SessionSettings = getDefaultSessionSettings();
         for (let i = 0; i < args.length; i += 2) {
             const arg = args[i];
             const val = args[i + 1];
@@ -84,6 +88,9 @@ export class CommandManager {
                     break;
                 case STATUS_MESSAGE_REFRESH_DELAY:
                     sessionSettings.refreshDelay = OmiliaDuration.fromFormattedTimeString(val, true);
+                    break;
+                case SCORING_MODE:
+                    sessionSettings.speakerScorer = SpeakerScorer.fromArgString(val);
                     break;
                 default:
                     throw new UnknownArgumentError(START_MONITORING_CMD, arg);

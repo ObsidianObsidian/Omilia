@@ -1,10 +1,10 @@
 import {
     COMMAND_PREFIX, DETAILS_CMD,
     HELP_CMD,
-    LEAVE_CMD,
+    LEAVE_CMD, SCORING_MODE, SCORING_MODE_TO_ARG,
     START_MONITORING_CMD, STATUS_MESSAGE_REFRESH_DELAY,
     STOP_CMD,
-    TIME_WINDOW_DURATION,
+    TIME_WINDOW_DURATION, TOTAL_TIME_SCORE_ARG, VOICE_PRESENCE_SCORE_ARG,
 } from "../constants/command-constants";
 import {DEPENDENCIES, REPO_URL} from "../constants/info-constants";
 import {
@@ -12,8 +12,9 @@ import {
     PAUSE_COUNTS_EMOJI,
     REQUEST_TO_SPEAK_EMOJI,
 } from "../constants/interaction-constants";
-import {OmiliaDuration} from "../utils/omilia-duration";
+import {DEFAULT_SCORER_TYPE} from "../constants/session-constants";
 import {OmiliaSession} from "../utils/omilia-session";
+import {SpeakerScore} from "../utils/speaker-score/speaker-score";
 
 export class Formatter {
 
@@ -31,14 +32,15 @@ export class Formatter {
         }
         return "🪐 **Live Session** 🪐\n\n" +
             "**`○ next up`** 🎙️\n" +
-            Formatter.getSpeakerBoard(session, session.getSortedCandidateSpeakerTimes()) +
+            Formatter.getSpeakerBoard(session, session.getSortedCandidateSpeakerScores()) +
             "\n" +
-            "**`○ speaker times`** 🌀\n" +
-            Formatter.getSpeakerBoard(session, session.getSortedVisibleSpeakerTimes()) + "\n" +
+            "**`○ speaker scores`** 🌀\n" +
+            Formatter.getSpeakerBoard(session, session.getSortedVisibleSpeakerScores()) + "\n" +
             privilegedSpeakerBoard +
             `\`○ settings:\`\n` +
             `  ${Formatter.formatAttributeWithBadge("time window", timeWindowStr)}\n` +
             `  ${Formatter.formatAttributeWithBadge("refresh delay", session.settings.refreshDelay.toString())}\n` +
+            `  ${Formatter.formatAttributeWithBadge("scoring mode", session.settings.speakerScorer.getScoreModeName())}\n` +
             "\n" +
             `\`○ actions:\`\n` +
             `  ${Formatter.formatAttributeWithBadge("request to speak", `${REQUEST_TO_SPEAK_EMOJI}`)}\n` +
@@ -66,6 +68,10 @@ export class Formatter {
             `  ○ arguments:\n` +
             `    ${TIME_WINDOW_DURATION}: how old an intervention can be to be taken into account\n` +
             `    ${STATUS_MESSAGE_REFRESH_DELAY}: time interval between every refresh\n` +
+            `    ${SCORING_MODE}: scoring unit to use (default is ${SCORING_MODE_TO_ARG.get(DEFAULT_SCORER_TYPE)})\n` +
+            `      ○ options:\n` +
+            `        ${TOTAL_TIME_SCORE_ARG}: total time user has spoken\n` +
+            `        ${VOICE_PRESENCE_SCORE_ARG}: fraction of time user has spoken while active in the voice channel\n` +
             `• ${LEAVE_CMD}: to make me leave the channel\n` +
             `• ${STOP_CMD}: same as ${LEAVE_CMD}\n` +
             `• ${DETAILS_CMD}: links to my source code and a list of my dependencies ☕.\n` +
@@ -96,14 +102,14 @@ export class Formatter {
         return `${boldifier}\`• ${badge}\`${boldifier} ${value}`;
     }
 
-    private static getSpeakerBoard(session: OmiliaSession, speakerTimes: Array<[string, number]>): string {
+    private static getSpeakerBoard(session: OmiliaSession, speakerScores: Array<[string, SpeakerScore]>): string {
         let speakerBoard = "";
-        if (speakerTimes.length === 0) {
+        if (speakerScores.length === 0) {
             return `  none\n`;
         }
 
-        speakerTimes.forEach(([userId, speakerTime], idx) => {
-            speakerBoard += `  ${this.formatAttributeWithBadge(`${idx + 1}`, `${session.getGuildMemberFromId(userId).displayName} ${new OmiliaDuration(speakerTime).toString()}`, true)}\n`;
+        speakerScores.forEach(([userId, speakerScore], idx) => {
+            speakerBoard += `  ${this.formatAttributeWithBadge(`${idx + 1}`, `${session.getGuildMemberFromId(userId).displayName} ${speakerScore.toString()}`, true)}\n`;
         });
         return speakerBoard;
     }

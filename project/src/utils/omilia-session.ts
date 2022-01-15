@@ -17,6 +17,7 @@ import {InactivityTimeoutError, notifyOmiliaError, NotInVoiceChannelError} from 
 import {SessionSettings} from "../interfaces/session-settings";
 import {Formatter} from "../services/formatter";
 import {ChannelActivityTracker} from "./channel-activity-tracker";
+import {SpeakerScore} from "./speaker-score/speaker-score";
 
 // tslint:disable-next-line:no-var-requires
 const {joinVoiceChannel} = require("@discordjs/voice");
@@ -139,19 +140,19 @@ export class OmiliaSession {
         return this.activationMessage.guildId;
     }
 
-    public getSortedCandidateSpeakerTimes(): Array<[string, number]> {
-        return this.getSortedSpeakerTimes().filter(([userId, _]) => this.getCandidateSpeakersInChannel().has(userId));
+    public getSortedCandidateSpeakerScores(): Array<[string, SpeakerScore]> {
+        return this.getSortedSpeakerScores().filter(([userId, _]) => this.getCandidateSpeakersInChannel().has(userId));
     }
 
-    public getSortedVisibleSpeakerTimes(): Array<[string, number]> {
-        return this.getSortedSpeakerTimes().filter(([userId, _]) => !this.hiddenSpeakers.has(userId));
+    public getSortedVisibleSpeakerScores(): Array<[string, SpeakerScore]> {
+        return this.getSortedSpeakerScores().filter(([userId, _]) => !this.hiddenSpeakers.has(userId));
     }
 
-    public getSortedSpeakerTimes(): Array<[string, number]> {
-        const speakerTimes: Array<[string, number]> = Array.from(this.humanVoiceChannelMembers.keys())
+    public getSortedSpeakerScores(): Array<[string, SpeakerScore]> {
+        const speakerScores: Array<[string, SpeakerScore]> = Array.from(this.humanVoiceChannelMembers.keys())
             .map((candidateSpeakerId) =>
-                [candidateSpeakerId, this.channelActivityTracker.getUserRelevantSpeakTime(candidateSpeakerId)]);
-        return speakerTimes.sort(([_, aTime], [__, bTime]) => aTime - bTime);
+                [candidateSpeakerId, this.channelActivityTracker.getUserRelevantScore(candidateSpeakerId)]);
+        return speakerScores.sort(([_, aScore], [__, bScore]) => aScore.valueOf() - bScore.valueOf());
     }
 
     public getPrivilegedSpeakersInChannel(): string[] {

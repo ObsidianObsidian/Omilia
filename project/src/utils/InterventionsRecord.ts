@@ -1,7 +1,8 @@
 import {MINIMUM_SPEAK_TIME_THRESHOLD} from "../constants/session-constants";
+import {SessionSettings} from "../interfaces/session-settings";
 
 export class InterventionsRecord {
-    private readonly timeWindowDuration: number | null;
+    private readonly sessionSettings: SessionSettings;
     private birthTime = Date.now();
     // Map<memberId, [[start, duration], ...]
     private interventionRecords = new Map<string, Array<[number, number]>>();
@@ -10,8 +11,8 @@ export class InterventionsRecord {
     private latestInterventionStopTimes = new Map<string, number>();
     private exemptedMembers = new Set<string>();
 
-    constructor(timeWindowDuration: number | null = null) {
-        this.timeWindowDuration = timeWindowDuration;
+    constructor(sessionSettings: SessionSettings) {
+        this.sessionSettings = sessionSettings;
     }
 
     public getExemptedMembers(): Set<string> {
@@ -25,8 +26,8 @@ export class InterventionsRecord {
         }
 
         let oldestAllowedIntervention = this.birthTime;
-        if (this.timeWindowDuration) {
-            oldestAllowedIntervention = currentTime - this.timeWindowDuration;
+        if (this.sessionSettings.timeWindowDuration) {
+            oldestAllowedIntervention = currentTime - this.sessionSettings.timeWindowDuration.valueOf();
         }
 
         const interventionsArray = this.interventionRecords.get(memberId);
