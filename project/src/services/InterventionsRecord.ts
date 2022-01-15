@@ -3,24 +3,24 @@ import {MINIMUM_SPEAK_TIME_THRESHOLD} from "../constants/session-constants";
 export class InterventionsRecord {
     private readonly timeWindowDuration: number | null;
     private birthTime = Date.now();
-    // Map<userId, [[start, duration], ...]
-    private speakingRecords = new Map<string, Array<[number, number]>>();
-    // Map<userId, start>
-    private latestVoiceStartTimes = new Map<string, number>();
-    private latestVoiceStopTimes = new Map<string, number>();
-    private privilegedSpeakers = new Set<string>();
+    // Map<memberId, [[start, duration], ...]
+    private interventionRecords = new Map<string, Array<[number, number]>>();
+    // Map<memberId, start>
+    private latestInterventionStartTimes = new Map<string, number>();
+    private latestInterventionStopTimes = new Map<string, number>();
+    private exemptedMembers = new Set<string>();
 
     constructor(timeWindowDuration: number | null = null) {
         this.timeWindowDuration = timeWindowDuration;
     }
 
-    public getPrivilegedSpeakers(): Set<string> {
-        return this.privilegedSpeakers;
+    public getExemptedMembers(): Set<string> {
+        return this.exemptedMembers;
     }
 
-    public getUserRelevantSpeakTime(userId: string): number {
+    public getMemberRelevantInterventionTime(memberId: string): number {
         const currentTime = Date.now();
-        if (this.userNeverSpoke(userId)) {
+        if (this.noInterventionsStarted(memberId)) {
             return 0;
         }
 
@@ -29,7 +29,7 @@ export class InterventionsRecord {
             oldestAllowedIntervention = currentTime - this.timeWindowDuration;
         }
 
-        const interventionsArray = this.speakingRecords.get(userId);
+        const interventionsArray = this.interventionRecords.get(memberId);
         let totalInterventionDuration = 0;
 
         for (let i = interventionsArray.length - 1; i >= 0; i--) {
@@ -40,62 +40,62 @@ export class InterventionsRecord {
             totalInterventionDuration += duration;
         }
 
-        if (this.isCurrentlySpeaking(userId) && !this.privilegedSpeakers.has(userId)) {
-            const ongoingInterventionDuration = currentTime - this.latestVoiceStartTimes.get(userId);
+        if (this.isCurrentlyIntervening(memberId) && !this.exemptedMembers.has(memberId)) {
+            const ongoingInterventionDuration = currentTime - this.latestInterventionStartTimes.get(memberId);
             totalInterventionDuration += ongoingInterventionDuration;
         }
 
         return totalInterventionDuration;
     }
 
-    public onStartSpeaking(userId: string): void {
-        if (this.userNeverSpoke(userId)) {
-            this.speakingRecords.set(userId, []);
+    public onInterventionStart(memberId: string): void {
+        if (this.noInterventionsStarted(memberId)) {
+            this.interventionRecords.set(memberId, []);
         }
-        this.latestVoiceStartTimes.set(userId, Date.now());
+        this.latestInterventionStartTimes.set(memberId, Date.now());
     }
 
-    public onStopSpeaking(userId: string): void {
-        this.latestVoiceStopTimes.set(userId, Date.now());
-        if (this.privilegedSpeakers.has(userId) || this.userNeverSpoke(userId)) {
+    public onInterventionStop(memberId: string): void {
+        this.latestInterventionStopTimes.set(memberId, Date.now());
+        if (this.exemptedMembers.has(memberId) || this.noInterventionsStarted(memberId)) {
             return;
         }
-        const start = this.latestVoiceStartTimes.get(userId);
-        const duration = this.latestVoiceStopTimes.get(userId) - start;
+        const start = this.latestInterventionStartTimes.get(memberId);
+        const duration = this.latestInterventionStopTimes.get(memberId) - start;
         if (duration < MINIMUM_SPEAK_TIME_THRESHOLD) {
             return;
         }
-        this.speakingRecords.get(userId).push([start, duration]);
+        this.interventionRecords.get(memberId).push([start, duration]);
     }
 
-    public setPrivilegedSpeakers(privilegedSpeakers: string[]): void {
-        const addedPrivilegedSpeakers = privilegedSpeakers
-            .filter((speakerId) => !this.privilegedSpeakers.has(speakerId));
-        this.beforePrivilegedSpeakersChange(addedPrivilegedSpeakers);
-        this.privilegedSpeakers = new Set<string>(privilegedSpeakers);
+    public setExemptedMembers(exemptedMembers: string[]): void {
+        const addedExemptedMembers = exemptedMembers
+            .filter((speakerId) => !this.exemptedMembers.has(speakerId));
+        this.beforeExemptedMembersChange(addedExemptedMembers);
+        this.exemptedMembers = new Set<string>(exemptedMembers);
     }
 
-    private isCurrentlySpeaking(userId: string): boolean {
-        if (this.userNeverSpoke(userId)) {
+    private isCurrentlyIntervening(memberId: string): boolean {
+        if (this.noInterventionsStarted(memberId)) {
             return false;
         }
-        if (this.userNeverStoppedSpeaking(userId)) {
+        if (this.noInterventionsStopped(memberId)) {
             return true;
         }
-        return this.latestVoiceStartTimes.get(userId) > this.latestVoiceStopTimes.get(userId);
+        return this.latestInterventionStartTimes.get(memberId) > this.latestInterventionStopTimes.get(memberId);
     }
 
-    private userNeverSpoke(userId: string) {
-        return !this.latestVoiceStartTimes.has(userId);
+    private noInterventionsStarted(memberId: string) {
+        return !this.latestInterventionStartTimes.has(memberId);
     }
 
-    private userNeverStoppedSpeaking(userId: string) {
-        return !this.latestVoiceStopTimes.has(userId);
+    private noInterventionsStopped(memberId: string) {
+        return !this.latestInterventionStopTimes.has(memberId);
     }
 
-    private beforePrivilegedSpeakersChange(addedPrivilegedSpeakers: string[]): void {
-        for (const addedPrivilegedSpeaker of addedPrivilegedSpeakers) {
-            this.onStopSpeaking(addedPrivilegedSpeaker);
+    private beforeExemptedMembersChange(addedExemptedMembers: string[]): void {
+        for (const addedExemptedMember of addedExemptedMembers) {
+            this.onInterventionStop(addedExemptedMember);
         }
     }
 }

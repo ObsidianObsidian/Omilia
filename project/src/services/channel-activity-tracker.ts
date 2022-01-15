@@ -26,8 +26,7 @@ export class ChannelActivityTracker {
     }
 
     public getUserRelevantSpeakTime(userId: string): number {
-        console.log("connection time", this.connectionsRecord.getUserRelevantSpeakTime(userId));
-        return this.voiceInterventionsRecord.getUserRelevantSpeakTime(userId); // TODO implement options for other units;
+        return this.voiceInterventionsRecord.getMemberRelevantInterventionTime(userId); // TODO implement options for other units;
     }
 
     public getInactivityTimeoutObservable(): Observable<void> {
@@ -40,25 +39,25 @@ export class ChannelActivityTracker {
     }
 
     public setPrivilegedSpeakers(privilegedSpeakers: string[]): void {
-        this.voiceInterventionsRecord.setPrivilegedSpeakers(privilegedSpeakers);
+        this.voiceInterventionsRecord.setExemptedMembers(privilegedSpeakers);
     }
 
     public getPrivilegedSpeakers(): Set<string> {
-        return this.voiceInterventionsRecord.getPrivilegedSpeakers();
+        return this.voiceInterventionsRecord.getExemptedMembers();
     }
 
     public onUserParticipationStatusChange(userId: string, becomingActive: boolean): void {
-        becomingActive ? this.connectionsRecord.onStartSpeaking(userId) : this.connectionsRecord.onStopSpeaking(userId);
+        becomingActive ? this.connectionsRecord.onInterventionStart(userId) : this.connectionsRecord.onInterventionStop(userId);
     }
 
     private start(): void {
         this.voiceConnection.receiver.speaking.on("start", ((userId) => {
             this.refreshInactivityTimeoutTimer();
-            this.voiceInterventionsRecord.onStartSpeaking(userId);
+            this.voiceInterventionsRecord.onInterventionStart(userId);
         }));
         this.voiceConnection.receiver.speaking.on("end", ((userId) => {
             this.refreshInactivityTimeoutTimer();
-            this.voiceInterventionsRecord.onStopSpeaking(userId);
+            this.voiceInterventionsRecord.onInterventionStop(userId);
         }));
         this.registerAllConnectedUsers();
         this.refreshInactivityTimeoutTimer();
@@ -66,7 +65,7 @@ export class ChannelActivityTracker {
 
     private registerAllConnectedUsers(): void {
         const humanUsersInChannel = Array.from(this.voiceChannel.members).filter(([_, user]) => !user.user.bot);
-        humanUsersInChannel.forEach(([userId, _]) => this.connectionsRecord.onStartSpeaking(userId));
+        humanUsersInChannel.forEach(([userId, _]) => this.connectionsRecord.onInterventionStart(userId));
     }
 
     private refreshInactivityTimeoutTimer(): void {
