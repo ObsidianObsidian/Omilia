@@ -104,7 +104,6 @@ export class CommandManager {
             const safeRefreshDelay = Math.max(MINIMUM_REFRESH_DELAY, sessionSettings.refreshDelay.valueOf());
             sessionSettings.refreshDelay = new OmiliaDuration(safeRefreshDelay);
         }
-        console.log("extractSessionSettingsFromArgs", sessionSettings);
         return sessionSettings;
     }
 }

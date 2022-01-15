@@ -47,7 +47,6 @@ export class Orchestrator {
     }
 
     public static editSessionSettings(guildId: string, settings: SessionSettingsDifferences): void {
-        console.log("live sesh", this.sessions.has(guildId));
         if (!this.sessions.has(guildId)) {
             throw new NoActiveSessionError(EDIT_SETTINGS_CMD);
         }

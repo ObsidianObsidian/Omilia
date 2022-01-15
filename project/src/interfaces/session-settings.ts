@@ -7,6 +7,18 @@ import {SessionSettingsDifferences} from "./session-settings-differences";
 // tslint:disable-next-line:interface-name
 export class SessionSettings implements SessionSettingsDifferences {
 
+    public set speakerScorer(speakerScorer) {
+        const scorerChanged = speakerScorer !== this._speakerScorer;
+        this._speakerScorer = speakerScorer;
+        if (scorerChanged) {
+            this.scorerChangeSubject.next();
+        }
+    }
+
+    public get speakerScorer() {
+        return this._speakerScorer;
+    }
+
     public static fromSessionSettingsDifference(settingsDifferences: SessionSettingsDifferences): SessionSettings {
         const settings = SessionSettings.defaultSessionSettings();
         settings.update(settingsDifferences);
@@ -26,21 +38,20 @@ export class SessionSettings implements SessionSettingsDifferences {
 
     private scorerChangeSubject = new Subject<void>();
 
-    private constructor() {}
-
-    public update(newSettings: SessionSettingsDifferences): void {
-        this.refreshDelay = newSettings.refreshDelay ? newSettings.refreshDelay : this.refreshDelay;
-        this.speakerScorer = newSettings.speakerScorer ? newSettings.speakerScorer : this.speakerScorer;
-        this.timeWindowDuration = newSettings.timeWindowDuration ?
-            newSettings.timeWindowDuration : this.timeWindowDuration;
+    private constructor() {
     }
 
-    public set speakerScorer(speakerScorer) {
-        this._speakerScorer = speakerScorer;
-        this.scorerChangeSubject.next();
+    public update(newSettings: SessionSettingsDifferences): void {
+        this.refreshDelay = this.getNewAttribute(this.refreshDelay, newSettings.refreshDelay);
+        this.speakerScorer = this.getNewAttribute(this.speakerScorer, newSettings.speakerScorer);
+        this.timeWindowDuration = this.getNewAttribute(this.timeWindowDuration, newSettings.timeWindowDuration);
     }
 
     public getScorerChangeObservable(): Observable<void> {
         return this.scorerChangeSubject.asObservable();
+    }
+
+    private getNewAttribute<T>(backupVal: T, newVal: T | null): T {
+        return newVal ? newVal : backupVal;
     }
 }
