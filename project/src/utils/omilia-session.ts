@@ -13,8 +13,13 @@ import {
     PAUSE_COUNTS_EMOJI,
     REQUEST_TO_SPEAK_EMOJI,
 } from "../constants/interaction-constants";
-import {InactivityTimeoutError, notifyOmiliaError, NotInVoiceChannelError} from "../constants/omilia-errors";
+import {
+    InactivityTimeoutError,
+    notifyOmiliaError,
+    NotInVoiceChannelError,
+} from "../constants/omilia-errors";
 import {SessionSettings} from "../interfaces/session-settings";
+import {SessionSettingsDifferences} from "../interfaces/session-settings-differences";
 import {Formatter} from "../services/formatter";
 import {ChannelActivityTracker} from "./channel-activity-tracker";
 import {SpeakerScore} from "./speaker-score/speaker-score";
@@ -24,13 +29,10 @@ const {joinVoiceChannel} = require("@discordjs/voice");
 
 export class OmiliaSession {
 
-    public get settings(): SessionSettings {
-        return this.channelActivityTracker.settings;
-    }
-
     private get humanVoiceChannelMembers(): Collection<Snowflake, GuildMember> {
         return this.voiceChannel.members.filter((member) => !member.user.bot);
     }
+    public settings: SessionSettings;
 
     private activationMessage: Message;
     private statusMessages: Message[] = [];
@@ -61,20 +63,26 @@ export class OmiliaSession {
         return this.endSubject.asObservable();
     }
 
-    public async start(settings: SessionSettings) {
+    public async start(settings: SessionSettingsDifferences) {
+        this.settings = SessionSettings.fromSessionSettingsDifference(settings);
         try {
             [this.voiceChannel, this.voiceConnection] = await this.joinUserChannel();
         } catch (e) {
             notifyOmiliaError(e, this.activationMessage.channel);
         }
         this.voiceConnection.subscribe(this.audioPlayer);
-        this.channelActivityTracker = new ChannelActivityTracker(this.voiceChannel, this.voiceConnection, settings);
+        this.channelActivityTracker = new ChannelActivityTracker
+        (this.voiceChannel, this.voiceConnection, this.settings);
         this.inactivityTimeoutSubscription = this.channelActivityTracker
             .getInactivityTimeoutObservable().subscribe(() => {
             notifyOmiliaError(new InactivityTimeoutError(), this.activationMessage.channel);
             this.end();
         });
         await this.setup();
+    }
+
+    public updateSettings(settings: SessionSettingsDifferences): void {
+        this.settings.update(settings);
     }
 
     public end() {
@@ -101,7 +109,7 @@ export class OmiliaSession {
         if (![oldState.channelId, newState.channelId].includes(this.voiceChannel.id)) {
             return;
         }
-        const oldStateActive = oldState.channel != null && !oldState.deaf; // TODO implement disconnection status
+        const oldStateActive = oldState.channel != null && !oldState.deaf;
         const newStateActive = newState.channel != null && !newState.deaf;
 
         if (oldStateActive === newStateActive) {

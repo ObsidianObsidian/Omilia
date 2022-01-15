@@ -1,10 +1,10 @@
 import {
-    COMMAND_PREFIX, DETAILS_CMD,
+    COMMAND_PREFIX, DETAILS_CMD, EDIT_SETTINGS_CMD,
     HELP_CMD,
-    LEAVE_CMD, SCORING_MODE, SCORING_MODE_TO_ARG,
-    START_MONITORING_CMD, STATUS_MESSAGE_REFRESH_DELAY,
+    LEAVE_CMD, SCORING_MODE_ARG, SCORING_MODE_TO_OPT,
+    START_MONITORING_CMD, STATUS_MESSAGE_REFRESH_DELAY_ARG,
     STOP_CMD,
-    TIME_WINDOW_DURATION, TOTAL_TIME_SCORE_ARG, VOICE_PRESENCE_SCORE_ARG,
+    TIME_WINDOW_DURATION_ARG, TOTAL_TIME_SCORE_OPT, VOICE_PRESENCE_SCORE_OPT,
 } from "../constants/command-constants";
 import {DEPENDENCIES, REPO_URL} from "../constants/info-constants";
 import {
@@ -16,6 +16,7 @@ import {DEFAULT_SCORER_TYPE} from "../constants/session-constants";
 import {OmiliaSession} from "../utils/omilia-session";
 import {SpeakerScore} from "../utils/speaker-score/speaker-score";
 
+// tslint:disable:max-line-length
 export class Formatter {
 
     public static getSessionStatusMessage(session: OmiliaSession): string {
@@ -66,12 +67,13 @@ export class Formatter {
             `• ${HELP_CMD}: well uhm...\n` +
             `• ${START_MONITORING_CMD}: start monitoring a conversation\n` +
             `  ○ arguments:\n` +
-            `    ${TIME_WINDOW_DURATION}: how old an intervention can be to be taken into account\n` +
-            `    ${STATUS_MESSAGE_REFRESH_DELAY}: time interval between every refresh\n` +
-            `    ${SCORING_MODE}: scoring unit to use (default is ${SCORING_MODE_TO_ARG.get(DEFAULT_SCORER_TYPE)})\n` +
+            `    ${TIME_WINDOW_DURATION_ARG}: how old an intervention can be to be taken into account\n` +
+            `    ${STATUS_MESSAGE_REFRESH_DELAY_ARG}: time interval between every refresh\n` +
+            `    ${SCORING_MODE_ARG}: scoring unit to use (default is ${SCORING_MODE_TO_OPT.get(DEFAULT_SCORER_TYPE)})\n` +
             `      ○ options:\n` +
-            `        ${TOTAL_TIME_SCORE_ARG}: total time user has spoken\n` +
-            `        ${VOICE_PRESENCE_SCORE_ARG}: fraction of time user has spoken while active in the voice channel\n` +
+            `        ${TOTAL_TIME_SCORE_OPT}: total time user has spoken\n` +
+            `        ${VOICE_PRESENCE_SCORE_OPT}: fraction of time user has spoken while active in the voice channel\n` +
+            `• ${EDIT_SETTINGS_CMD}: edit the settings for the current session (same args as ${START_MONITORING_CMD})\n` +
             `• ${LEAVE_CMD}: to make me leave the channel\n` +
             `• ${STOP_CMD}: same as ${LEAVE_CMD}\n` +
             `• ${DETAILS_CMD}: links to my source code and a list of my dependencies ☕.\n` +
@@ -79,7 +81,7 @@ export class Formatter {
             `**\`example\`**\n` +
             `\`\`\`\n` +
             `${COMMAND_PREFIX} ${HELP_CMD}\n` +
-            `${COMMAND_PREFIX} ${START_MONITORING_CMD} ${TIME_WINDOW_DURATION} 4m20s ${STATUS_MESSAGE_REFRESH_DELAY} 10s\n` +
+            `${COMMAND_PREFIX} ${START_MONITORING_CMD} ${TIME_WINDOW_DURATION_ARG} 4m20s ${STATUS_MESSAGE_REFRESH_DELAY_ARG} 10s ${SCORING_MODE_ARG} ${TOTAL_TIME_SCORE_OPT}\n` +
             `${COMMAND_PREFIX} ${LEAVE_CMD}\n` +
             `${COMMAND_PREFIX} ${DETAILS_CMD}\n` +
             `\`\`\``;

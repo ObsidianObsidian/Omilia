@@ -1,11 +1,17 @@
 import {Message, MessageReaction, PartialMessageReaction, VoiceState} from "discord.js";
+import {EDIT_SETTINGS_CMD} from "../constants/command-constants";
 import {
     HIDE_IN_SPEAKER_BOARD_EMOJI,
     PAUSE_COUNTS_EMOJI,
     REQUEST_TO_SPEAK_EMOJI,
 } from "../constants/interaction-constants";
-import {AlreadyDisconnectedError, notifyOmiliaError, SessionAlreadyActiveError} from "../constants/omilia-errors";
-import {SessionSettings} from "../interfaces/session-settings";
+import {
+    AlreadyDisconnectedError,
+    NoActiveSessionError,
+    notifyOmiliaError,
+    SessionAlreadyActiveError,
+} from "../constants/omilia-errors";
+import {SessionSettingsDifferences} from "../interfaces/session-settings-differences";
 import {OmiliaSession} from "../utils/omilia-session";
 import {OmiliaStatusMessageMap} from "../utils/omilia-status-message-map";
 
@@ -17,7 +23,7 @@ export class Orchestrator {
     // Map<messageId, owner Omilia session>
     private static statusMessageTrackerMap = new OmiliaStatusMessageMap();
 
-    public static startSession(activationMessage: Message, sessionSettings: SessionSettings): void {
+    public static startSession(activationMessage: Message, sessionSettings: SessionSettingsDifferences): void {
         if (Orchestrator.sessions.has(activationMessage.guildId)) {
             throw new SessionAlreadyActiveError();
         }
@@ -38,6 +44,14 @@ export class Orchestrator {
             throw new AlreadyDisconnectedError();
         }
         this.sessions.get(guildId).end();
+    }
+
+    public static editSessionSettings(guildId: string, settings: SessionSettingsDifferences): void {
+        console.log("live sesh", this.sessions.has(guildId));
+        if (!this.sessions.has(guildId)) {
+            throw new NoActiveSessionError(EDIT_SETTINGS_CMD);
+        }
+        this.sessions.get(guildId).updateSettings(settings);
     }
 
     public static onSessionEnd(session: OmiliaSession) {

@@ -1,12 +1,12 @@
 import {GuildTextBasedChannel, If, TextBasedChannel} from "discord.js";
 import {OmiliaDuration} from "../utils/omilia-duration";
 import {
-    ARG_TO_SCORING_MODE,
     AVAILABLE_COMMAND_ARGS,
     AVAILABLE_COMMANDS,
     COMMAND_PREFIX,
     LEAVE_CMD,
-    STOP_CMD,
+    OPT_TO_SCORING_MODE,
+    START_MONITORING_CMD, STOP_CMD,
 } from "./command-constants";
 import {MAXIMUM_INACTIVITY_THRESHOLD} from "./session-constants";
 
@@ -58,7 +58,7 @@ export class InvalidScorerOptionError extends OmiliaErrors {
     constructor(arg: string) {
         super(`"${arg}" is not a valid scoring option.\n`
             + `Please use one of the following options:\n`
-            + `\`${Array.from(ARG_TO_SCORING_MODE.keys()).join("\` | \`")}\``);
+            + `\`${Array.from(OPT_TO_SCORING_MODE.keys()).join("\` | \`")}\``);
     }
 }
 
@@ -78,6 +78,12 @@ export class InactivityTimeoutError extends OmiliaErrors {
 export class AlreadyDisconnectedError extends OmiliaErrors {
     constructor() {
         super(`Cannot ${STOP_CMD} or ${LEAVE_CMD}. I am already gone 🍃.`);
+    }
+}
+
+export class NoActiveSessionError extends OmiliaErrors {
+    constructor(cmd: string) {
+        super(`Cannot ${cmd}. No active sessions. Please start a new session with ${COMMAND_PREFIX} ${START_MONITORING_CMD}`);
     }
 }
 

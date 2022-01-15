@@ -34,8 +34,10 @@ export class InterventionsRecord {
         let totalInterventionDuration = 0;
 
         for (let i = interventionsArray.length - 1; i >= 0; i--) {
-            const [interventionTime, duration] = interventionsArray[i];
-            if (interventionTime < oldestAllowedIntervention) {
+            const [start, duration] = interventionsArray[i];
+            if (start < oldestAllowedIntervention) {
+                const end = start + duration;
+                totalInterventionDuration += end - oldestAllowedIntervention;
                 break;
             }
             totalInterventionDuration += duration;
@@ -43,7 +45,9 @@ export class InterventionsRecord {
 
         if (this.isCurrentlyIntervening(memberId) && !this.exemptedMembers.has(memberId)) {
             const ongoingInterventionDuration = currentTime - this.latestInterventionStartTimes.get(memberId);
-            totalInterventionDuration += ongoingInterventionDuration;
+            const deFactoTimeWindowDuration = currentTime - oldestAllowedIntervention;
+            const validPartOfIntervention = Math.min(ongoingInterventionDuration, deFactoTimeWindowDuration);
+            totalInterventionDuration += validPartOfIntervention;
         }
 
         return totalInterventionDuration;

@@ -1,6 +1,6 @@
 // Session time thresholds
 // Minimum time required for a user intervention to be accounted for (a debounce of sorts)
-import {SessionSettings} from "../interfaces/session-settings";
+import {SessionSettingsDifferences} from "../interfaces/session-settings-differences";
 import {OmiliaDuration} from "../utils/omilia-duration";
 import {VoicePresenceScorer} from "../utils/speaker-scorer/voice-presence-scorer";
 
@@ -12,6 +12,6 @@ export const DEFAULT_SESSION_REFRESH_DELAY = 5000;
 export const MINIMUM_REFRESH_DELAY = 5000;
 export const DEFAULT_SCORER_TYPE = VoicePresenceScorer;
 
-export function getDefaultSessionSettings(): SessionSettings {
+export function getDefaultSessionSettings(): SessionSettingsDifferences {
     return {refreshDelay: new OmiliaDuration(DEFAULT_SESSION_REFRESH_DELAY), speakerScorer: new DEFAULT_SCORER_TYPE()};
 }

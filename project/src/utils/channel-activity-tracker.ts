@@ -1,7 +1,6 @@
 import {VoiceConnection} from "@discordjs/voice";
 import {VoiceChannel} from "discord.js";
-import {Subject, timer} from "rxjs";
-import {Observable, Subscription} from "rxjs/dist/types";
+import {Observable, Subject, Subscription, timer} from "rxjs";
 import {MAXIMUM_INACTIVITY_THRESHOLD} from "../constants/session-constants";
 import {SessionSettings} from "../interfaces/session-settings";
 import {InterventionsRecord} from "./InterventionsRecord";
@@ -23,7 +22,7 @@ export class ChannelActivityTracker {
         this.settings = settings;
         this.connectionsRecord = new InterventionsRecord(settings);
         this.voiceInterventionsRecord = new InterventionsRecord(settings);
-        this.settings.speakerScorer.init(this.connectionsRecord, this.voiceInterventionsRecord);
+        this.settings.speakerScorer.setup(this.connectionsRecord, this.voiceInterventionsRecord);
         this.start();
     }
 
@@ -62,6 +61,9 @@ export class ChannelActivityTracker {
             this.refreshInactivityTimeoutTimer();
             this.voiceInterventionsRecord.onInterventionStop(userId);
         }));
+        this.settings.getScorerChangeObservable().subscribe(() => {
+            this.settings.speakerScorer.setup(this.connectionsRecord, this.voiceInterventionsRecord);
+        });
         this.registerAllConnectedUsers();
         this.refreshInactivityTimeoutTimer();
     }
