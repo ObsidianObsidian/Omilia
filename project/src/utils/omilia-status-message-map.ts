@@ -1,4 +1,4 @@
-import {OmiliaSession} from "../services/omilia-session";
+import {OmiliaSession} from "./omilia-session";
 
 export class OmiliaStatusMessageMap {
     // Map<messageId, omiliaSession>

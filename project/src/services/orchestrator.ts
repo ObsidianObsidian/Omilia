@@ -6,8 +6,8 @@ import {
 } from "../constants/interaction-constants";
 import {AlreadyDisconnectedError, notifyOmiliaError, SessionAlreadyActiveError} from "../constants/omilia-errors";
 import {SessionSettings} from "../interfaces/session-settings";
+import {OmiliaSession} from "../utils/omilia-session";
 import {OmiliaStatusMessageMap} from "../utils/omilia-status-message-map";
-import {OmiliaSession} from "./omilia-session";
 
 export class Orchestrator {
 

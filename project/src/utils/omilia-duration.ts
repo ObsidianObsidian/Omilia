@@ -10,6 +10,20 @@ export class OmiliaDuration {
         return duration;
     }
 
+    public static msTimeToString(durationMs): string {
+        const date = new Date(durationMs).toISOString().substr(11, 8);
+        const timeUnits = date.split(":");
+        const unitStrings = ["h", "m", "s"];
+        const displayStrings = [];
+        timeUnits.forEach((unitStr, idx) => {
+            const unit = Number(unitStr);
+            if ((unit)) {
+                displayStrings.push(`${unit}${unitStrings[idx]}`);
+            }
+        });
+        return displayStrings.join(" ");
+    }
+
     private static getMsTimeFromFormatted(formattedTime: string): number {
         const unitStrings: Array<[string, number]> = [["h", 60 * 60 * 1000], ["m", 60 * 1000], ["s", 1000]];
         let totalTime = 0;
@@ -41,17 +55,7 @@ export class OmiliaDuration {
     }
 
     public toString(): string {
-        const date = new Date(this.durationMs).toISOString().substr(11, 8);
-        const timeUnits = date.split(":");
-        const unitStrings = ["h", "m", "s"];
-        const displayStrings = [];
-        timeUnits.forEach((unitStr, idx) => {
-            const unit = Number(unitStr);
-            if ((unit)) {
-                displayStrings.push(`${unit}${unitStrings[idx]}`);
-            }
-        });
-        return displayStrings.join(" ");
+        return OmiliaDuration.msTimeToString(this.durationMs);
     }
 
     public valueOf(): number {

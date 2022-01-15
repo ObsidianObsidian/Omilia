@@ -10,8 +10,8 @@ export class ChannelActivityTracker {
     public settings: SessionSettings;
     private voiceConnection: VoiceConnection;
     private voiceChannel: VoiceChannel;
-    private voiceInterventionsRecord: InterventionsRecord;
     private connectionsRecord: InterventionsRecord;
+    private voiceInterventionsRecord: InterventionsRecord;
 
     private inactivityTimeoutSubject = new Subject<void>();
     private timeoutTimerSubscription: Subscription | null;
@@ -20,8 +20,8 @@ export class ChannelActivityTracker {
         this.voiceChannel = voiceChannel;
         this.voiceConnection = voiceConnection;
         this.settings = settings;
-        this.voiceInterventionsRecord = new InterventionsRecord(settings.timeWindowDuration?.valueOf());
         this.connectionsRecord = new InterventionsRecord();
+        this.voiceInterventionsRecord = new InterventionsRecord(settings.timeWindowDuration?.valueOf());
         this.start();
     }
 
@@ -47,7 +47,8 @@ export class ChannelActivityTracker {
     }
 
     public onUserParticipationStatusChange(userId: string, becomingActive: boolean): void {
-        becomingActive ? this.connectionsRecord.onInterventionStart(userId) : this.connectionsRecord.onInterventionStop(userId);
+        becomingActive ? this.connectionsRecord.onInterventionStart(userId)
+            : this.connectionsRecord.onInterventionStop(userId);
     }
 
     private start(): void {

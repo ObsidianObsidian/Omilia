@@ -13,7 +13,7 @@ import {
     REQUEST_TO_SPEAK_EMOJI,
 } from "../constants/interaction-constants";
 import {OmiliaDuration} from "../utils/omilia-duration";
-import {OmiliaSession} from "./omilia-session";
+import {OmiliaSession} from "../utils/omilia-session";
 
 export class Formatter {
 

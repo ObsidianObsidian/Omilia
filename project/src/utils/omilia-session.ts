@@ -15,8 +15,8 @@ import {
 } from "../constants/interaction-constants";
 import {InactivityTimeoutError, notifyOmiliaError, NotInVoiceChannelError} from "../constants/omilia-errors";
 import {SessionSettings} from "../interfaces/session-settings";
+import {Formatter} from "../services/formatter";
 import {ChannelActivityTracker} from "./channel-activity-tracker";
-import {Formatter} from "./formatter";
 
 // tslint:disable-next-line:no-var-requires
 const {joinVoiceChannel} = require("@discordjs/voice");
