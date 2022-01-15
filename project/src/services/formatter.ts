@@ -33,7 +33,7 @@ export class Formatter {
             "**`○ next up`** 🎙️\n" +
             Formatter.getSpeakerBoard(session, session.getSortedCandidateSpeakerTimes()) +
             "\n" +
-            "**`○ speaker times`** 💞\n" +
+            "**`○ speaker times`** 🌀\n" +
             Formatter.getSpeakerBoard(session, session.getSortedVisibleSpeakerTimes()) + "\n" +
             privilegedSpeakerBoard +
             `\`○ settings:\`\n` +

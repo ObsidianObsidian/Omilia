@@ -10,7 +10,7 @@ export class InterventionsRecord {
     private latestVoiceStopTimes = new Map<string, number>();
     private privilegedSpeakers = new Set<string>();
 
-    constructor(timeWindowDuration: number | null) {
+    constructor(timeWindowDuration: number | null = null) {
         this.timeWindowDuration = timeWindowDuration;
     }
 

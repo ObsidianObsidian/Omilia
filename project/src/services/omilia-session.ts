@@ -4,7 +4,7 @@ import {
     NoSubscriberBehavior,
     VoiceConnection,
 } from "@discordjs/voice";
-import {Collection, GuildMember, Message, Snowflake, VoiceChannel} from "discord.js";
+import {Collection, GuildMember, Message, Snowflake, VoiceChannel, VoiceState} from "discord.js";
 import play from "play-dl";
 import {Subject, timer} from "rxjs";
 import {Observable, Subscription} from "rxjs/dist/types";
@@ -15,8 +15,8 @@ import {
 } from "../constants/interaction-constants";
 import {InactivityTimeoutError, notifyOmiliaError, NotInVoiceChannelError} from "../constants/omilia-errors";
 import {SessionSettings} from "../interfaces/session-settings";
+import {ChannelActivityTracker} from "./channel-activity-tracker";
 import {Formatter} from "./formatter";
-import {ActivityTracker} from "./activity-tracker";
 
 // tslint:disable-next-line:no-var-requires
 const {joinVoiceChannel} = require("@discordjs/voice");
@@ -24,7 +24,7 @@ const {joinVoiceChannel} = require("@discordjs/voice");
 export class OmiliaSession {
 
     public get settings(): SessionSettings {
-        return this.voiceTracker.settings;
+        return this.channelActivityTracker.settings;
     }
 
     private get humanVoiceChannelMembers(): Collection<Snowflake, GuildMember> {
@@ -37,7 +37,7 @@ export class OmiliaSession {
     private voiceConnection: VoiceConnection | null;
     private audioPlayer = createAudioPlayer({behaviors: {noSubscriber: NoSubscriberBehavior.Stop}});
     private voiceChannel: VoiceChannel | null;
-    private voiceTracker: ActivityTracker | null;
+    private channelActivityTracker: ChannelActivityTracker | null;
 
     private refreshMessageSubscription: Subscription | null;
     private inactivityTimeoutSubscription: Subscription | null;
@@ -67,8 +67,9 @@ export class OmiliaSession {
             notifyOmiliaError(e, this.activationMessage.channel);
         }
         this.voiceConnection.subscribe(this.audioPlayer);
-        this.voiceTracker = new ActivityTracker(this.voiceConnection, settings);
-        this.inactivityTimeoutSubscription = this.voiceTracker.getInactivityTimeoutObservable().subscribe(() => {
+        this.channelActivityTracker = new ChannelActivityTracker(this.voiceChannel, this.voiceConnection, settings);
+        this.inactivityTimeoutSubscription = this.channelActivityTracker
+            .getInactivityTimeoutObservable().subscribe(() => {
             notifyOmiliaError(new InactivityTimeoutError(), this.activationMessage.channel);
             this.end();
         });
@@ -82,7 +83,7 @@ export class OmiliaSession {
         this.refreshMessageSubscription.unsubscribe();
         this.inactivityTimeoutSubscription.unsubscribe();
         this.audioPlayer.stop();
-        this.voiceTracker.end();
+        this.channelActivityTracker.end();
         this.endSubject.next();
     }
 
@@ -93,6 +94,19 @@ export class OmiliaSession {
         if (newCandidateSpeakers.length) {
             this.onNewCandidateSpeakers();
         }
+    }
+
+    public onVoiceStateChange(oldState: VoiceState, newState: VoiceState): void {
+        if (![oldState.channelId, newState.channelId].includes(this.voiceChannel.id)) {
+            return;
+        }
+        const oldStateActive = oldState.channel != null && !oldState.deaf; // TODO implement disconnection status
+        const newStateActive = newState.channel != null && !newState.deaf;
+
+        if (oldStateActive === newStateActive) {
+            return;
+        }
+        this.channelActivityTracker.onUserParticipationStatusChange(newState.member.id, newStateActive);
     }
 
     public async onNewCandidateSpeakers(): Promise<void> {
@@ -109,7 +123,7 @@ export class OmiliaSession {
     }
 
     public onPrivilegedSpeakersChange(privilegedSpeakers: string[]): void {
-        this.voiceTracker.setPrivilegedSpeakers(privilegedSpeakers);
+        this.channelActivityTracker.setPrivilegedSpeakers(privilegedSpeakers);
         this.refreshStatusMessagesOutOfSchedule();
     }
 
@@ -136,12 +150,12 @@ export class OmiliaSession {
     public getSortedSpeakerTimes(): Array<[string, number]> {
         const speakerTimes: Array<[string, number]> = Array.from(this.humanVoiceChannelMembers.keys())
             .map((candidateSpeakerId) =>
-                [candidateSpeakerId, this.voiceTracker.getUserRelevantSpeakTime(candidateSpeakerId)]);
+                [candidateSpeakerId, this.channelActivityTracker.getUserRelevantSpeakTime(candidateSpeakerId)]);
         return speakerTimes.sort(([_, aTime], [__, bTime]) => aTime - bTime);
     }
 
     public getPrivilegedSpeakersInChannel(): string[] {
-        return Array.from(this.voiceTracker.getPrivilegedSpeakers())
+        return Array.from(this.channelActivityTracker.getPrivilegedSpeakers())
             .filter((userId) => this.voiceChannel.members.has(userId));
     }
 

@@ -34,6 +34,10 @@ client.on("messageReactionRemove", (reaction) => {
     Orchestrator.onMessageReactionChange(reaction);
 });
 
+client.on("voiceStateUpdate", (oldState, newState) => {
+    Orchestrator.onVoiceStateChange(oldState, newState);
+});
+
 function onMessageCreate(message: Message): void {
     easterify(message);
     if (messageShouldBeIgnored((message))) {

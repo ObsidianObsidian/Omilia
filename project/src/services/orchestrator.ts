@@ -1,4 +1,4 @@
-import {Message, MessageReaction, PartialMessageReaction} from "discord.js";
+import {Message, MessageReaction, PartialMessageReaction, VoiceState} from "discord.js";
 import {
     HIDE_IN_SPEAKER_BOARD_EMOJI,
     PAUSE_COUNTS_EMOJI,
@@ -73,6 +73,13 @@ export class Orchestrator {
                     session.onPrivilegedSpeakersChange(usersWhoReacted);
             }
         });
+    }
+
+    public static onVoiceStateChange(oldState: VoiceState, newState: VoiceState): void {
+        if (!this.sessions.has(newState.guild.id)) {
+            return;
+        }
+        this.sessions.get(newState.guild.id).onVoiceStateChange(oldState, newState);
     }
 
     private static registerNewSession(session: OmiliaSession): void {

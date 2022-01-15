@@ -1,27 +1,33 @@
 import {VoiceConnection} from "@discordjs/voice";
+import {VoiceChannel} from "discord.js";
 import {Subject, timer} from "rxjs";
 import {Observable, Subscription} from "rxjs/dist/types";
 import {MAXIMUM_INACTIVITY_THRESHOLD} from "../constants/session-constants";
 import {SessionSettings} from "../interfaces/session-settings";
 import {InterventionsRecord} from "./InterventionsRecord";
 
-export class ActivityTracker {
+export class ChannelActivityTracker {
     public settings: SessionSettings;
     private voiceConnection: VoiceConnection;
-    private voiceRecords: InterventionsRecord;
+    private voiceChannel: VoiceChannel;
+    private voiceInterventionsRecord: InterventionsRecord;
+    private connectionsRecord: InterventionsRecord;
 
     private inactivityTimeoutSubject = new Subject<void>();
     private timeoutTimerSubscription: Subscription | null;
 
-    constructor(voiceConnection: VoiceConnection, settings: SessionSettings | null) {
+    constructor(voiceChannel: VoiceChannel, voiceConnection: VoiceConnection, settings: SessionSettings | null) {
+        this.voiceChannel = voiceChannel;
         this.voiceConnection = voiceConnection;
         this.settings = settings;
-        this.voiceRecords = new InterventionsRecord(settings.timeWindowDuration?.valueOf());
+        this.voiceInterventionsRecord = new InterventionsRecord(settings.timeWindowDuration?.valueOf());
+        this.connectionsRecord = new InterventionsRecord();
         this.start();
     }
 
     public getUserRelevantSpeakTime(userId: string): number {
-        return this.voiceRecords.getUserRelevantSpeakTime(userId); // TODO implement options for other units;
+        console.log("connection time", this.connectionsRecord.getUserRelevantSpeakTime(userId));
+        return this.voiceInterventionsRecord.getUserRelevantSpeakTime(userId); // TODO implement options for other units;
     }
 
     public getInactivityTimeoutObservable(): Observable<void> {
@@ -34,23 +40,33 @@ export class ActivityTracker {
     }
 
     public setPrivilegedSpeakers(privilegedSpeakers: string[]): void {
-        this.voiceRecords.setPrivilegedSpeakers(privilegedSpeakers);
+        this.voiceInterventionsRecord.setPrivilegedSpeakers(privilegedSpeakers);
     }
 
     public getPrivilegedSpeakers(): Set<string> {
-        return this.voiceRecords.getPrivilegedSpeakers();
+        return this.voiceInterventionsRecord.getPrivilegedSpeakers();
+    }
+
+    public onUserParticipationStatusChange(userId: string, becomingActive: boolean): void {
+        becomingActive ? this.connectionsRecord.onStartSpeaking(userId) : this.connectionsRecord.onStopSpeaking(userId);
     }
 
     private start(): void {
         this.voiceConnection.receiver.speaking.on("start", ((userId) => {
             this.refreshInactivityTimeoutTimer();
-            this.voiceRecords.onStartSpeaking(userId);
+            this.voiceInterventionsRecord.onStartSpeaking(userId);
         }));
         this.voiceConnection.receiver.speaking.on("end", ((userId) => {
             this.refreshInactivityTimeoutTimer();
-            this.voiceRecords.onStopSpeaking(userId);
+            this.voiceInterventionsRecord.onStopSpeaking(userId);
         }));
+        this.registerAllConnectedUsers();
         this.refreshInactivityTimeoutTimer();
+    }
+
+    private registerAllConnectedUsers(): void {
+        const humanUsersInChannel = Array.from(this.voiceChannel.members).filter(([_, user]) => !user.user.bot);
+        humanUsersInChannel.forEach(([userId, _]) => this.connectionsRecord.onStartSpeaking(userId));
     }
 
     private refreshInactivityTimeoutTimer(): void {
