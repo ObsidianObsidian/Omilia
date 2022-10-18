@@ -1,6 +1,6 @@
 # omilia
 Conversation metrics tracker  
-**Website: [omiliavoice.com](https://omiliavoice.com/)**
+**[omiliavoice.com](https://omiliavoice.com/)**
 
 ![](https://firebasestorage.googleapis.com/v0/b/omilia-7adde.appspot.com/o/media%2FOmilia%20logo%20colored.png?alt=media)
 
