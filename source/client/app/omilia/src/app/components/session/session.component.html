@@ -1,0 +1,15 @@
+<div class="session-container">
+  <div *ngIf="sessionExistenceUndetermined()">
+    <mat-spinner></mat-spinner>
+  </div>
+  <div *ngIf="sessionDoesNotExist()">
+    <h1>Session with id "{{conversationStateService.sessionId}}" does not exist</h1>
+  </div>
+  <div *ngIf="sessionExistenceConfirmed()">
+    <div *ngIf="!isAuthenticated()" class="profile-selection-area">
+      <span class="intro-phrase">Who are you?</span>
+      <app-selection-board [options]="getProfileSelectionOptions()" (selection)="onProfileSelection($event)" class="profile-selection-board"></app-selection-board>
+    </div>
+    <app-conversation *ngIf="isAuthenticated()"></app-conversation>
+  </div>
+</div>

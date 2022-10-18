@@ -1,0 +1,32 @@
+@use "src/app/styles/colors" as colors;
+
+.selection-board-container {
+  display: flex;
+  flex-wrap: wrap;
+  width: available;
+  justify-content: space-around;
+  align-items: center;
+}
+.selection-board-profile {
+  font-size: large;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+$profile-picture-side: 8em;
+$profile-picture-side-hover: $profile-picture-side * 1.3;
+.selection-board-profile-image {
+  width: $profile-picture-side;
+  height: $profile-picture-side;
+  object-fit: cover;
+  border-radius: 50%;
+
+  &:hover:not(.disabled) {
+    cursor: pointer;
+    box-shadow: colors.$contrast-color 0 0 0 0.15em;
+  }
+}
+.disabled {
+  filter: saturate(50%) opacity(50%);
+}

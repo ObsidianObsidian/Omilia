@@ -1,0 +1,25 @@
+.session-container {
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.profile-selection-board {
+  width: 50%;
+}
+
+.profile-selection-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80vw;
+}
+
+.intro-phrase {
+  $font-size: 4em;
+  font-size: $font-size;
+  min-height: 1em;
+}

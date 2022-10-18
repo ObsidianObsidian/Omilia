@@ -1,0 +1,21 @@
+<div id="conversation-container">
+  <span class="conversation-title">{{conversationStateService.getSessionName()}}</span>
+  <app-conversation-over *ngIf="conversationHasEnded()"></app-conversation-over>
+  <div id="active-conversation-container" *ngIf="!conversationHasEnded()">
+    <div class="conversation-header">
+      <mat-icon class="header-icon">person</mat-icon>
+      <mat-icon class="header-icon">timer</mat-icon>
+    </div>
+    <mat-divider class="conversation-divider"></mat-divider>
+    <div class="speaker-boards" *ngIf="!isEmptySession()">
+      <app-conversation-board *ngIf="ongoingRequests()" [conversationParticipants]="getRequestSpeakers()"></app-conversation-board>
+      <mat-divider *ngIf="multipleSpeakerBoards()" class="conversation-divider"></mat-divider>
+      <app-conversation-board [conversationParticipants]="getNonRequestSpeakers()"></app-conversation-board>
+      <button (click)="onRequestBtnClicked()" class="raise-hand-btn" [ngClass]="{'pressed': ongoingRequest() }" mat-fab color="primary" *ngIf="!isEmptySession()">
+        <mat-icon *ngIf="!ongoingRequest()">back_hand</mat-icon>
+        <mat-icon *ngIf="ongoingRequest()">radio_button_checked</mat-icon>
+      </button>
+    </div>
+    <div class="no-speaker-message" *ngIf="isEmptySession()">There is no one here... waiting for people to join...</div>
+  </div>
+</div>

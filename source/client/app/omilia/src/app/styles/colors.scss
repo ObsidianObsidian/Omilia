@@ -1,0 +1,22 @@
+@use '@angular/material' as mat;
+@use "src/styles" as styles;
+@use 'sass:map';
+
+$color-config:    mat.get-color-config(styles.$omilia-theme);
+$primary-palette: map.get($color-config, 'primary');
+$accent-palette:  map.get($color-config, 'accent');
+$warn-palette:    map.get($color-config, 'warn');
+$is-dark-theme:   map.get($color-config, 'is-dark');
+
+@mixin set-color($target-color) {
+  $target-hue: hue($target-color);
+  $target-saturation: saturation($target-color);
+  $target-lightness: lightness($target-color);
+  filter: brightness(0) invert(1) brightness(50%) sepia(1) saturate(9999) /*turn red*/ hue-rotate($target-hue) saturate($target-saturation) brightness($target-lightness);
+}
+
+$contrast-color: mat.get-color-from-palette($primary-palette, '200-contrast');
+$accent-color: mat.get-color-from-palette($accent-palette, 'darker');
+$primary-color: mat.get-color-from-palette($primary-palette, 'darker');
+$clear-text-color: white;
+

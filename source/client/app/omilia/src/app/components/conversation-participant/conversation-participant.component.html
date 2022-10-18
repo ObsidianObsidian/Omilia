@@ -1,0 +1,14 @@
+<div id="conversation-participant-container">
+  <div class="conversation-component-left-section">
+    <img class="profile-picture" src="{{conversationParticipant.profileInfo.avatarURL}}"/>
+    <span id="central-information-section">
+    <span>
+      {{conversationParticipant.profileInfo.displayName}}
+    </span>
+  </span>
+  </div>
+  <span class="speaker-state-icons">
+    <mat-icon *ngIf="conversationParticipant.requestToSpeak">back_hand</mat-icon>
+    <app-score-indicator [score]="getSpeakerScore()" [scoreIndicator]="conversationParametersService.getScoreIndicator()"></app-score-indicator>
+  </span>
+</div>

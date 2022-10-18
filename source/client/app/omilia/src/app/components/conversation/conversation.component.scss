@@ -1,0 +1,71 @@
+@use "src/app/styles/colors" as colors;
+
+#conversation-container {
+  min-width: 600px;
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2em;
+
+  .conversation-title {
+    font-size: 2em;
+  }
+}
+#active-conversation-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  width: 100%;
+  min-width: fit-content;
+}
+
+.conversation-divider {
+  background-color: rgba(0,0,0,0.2);
+}
+
+.speaker-boards {
+  display: flex;
+  flex-direction: column;
+  gap: 1em
+
+}
+
+.conversation-header {
+  display: flex;
+  justify-content: space-between;
+  $header-icon-spacing-from-edge: 0.5em;
+  margin: 0 $header-icon-spacing-from-edge 0 $header-icon-spacing-from-edge;
+  .header-icon {
+    font-size: 2em;
+  }
+}
+
+.no-speaker-message {
+  font-size: large;
+}
+
+.raise-hand-btn {
+  position: absolute;
+  left: 50vw;
+  bottom: 10vh;
+
+  transition: transform 0.2s;
+  &:hover {
+    transform: scale(1.2);
+  }
+
+  &.pressed {
+    animation-name: animateBorder;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    animation-direction: alternate;
+  }
+}
+@keyframes animateBorder {
+  to {
+    box-shadow: colors.$accent-color 0 0 0 0.5em !important;
+    color: colors.$accent-color;
+  }
+}

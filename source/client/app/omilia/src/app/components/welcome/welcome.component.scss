@@ -1,0 +1,89 @@
+@use "src/app/styles/colors" as colors;
+@use "src/styles" as styles;
+@use '@angular/material' as mat;
+@use 'src/app/styles/geometry' as geometry;
+
+$home-screen-width: 100vw;
+$home-screen-height: 100vh;
+
+#home-screen-container {
+  background: mat.get-color-from-palette(colors.$primary-palette, 500);
+  height: fit-content;
+  min-height: $home-screen-height;
+  display: flex;
+  justify-content: center;
+  color: colors.$clear-text-color;
+}
+
+$logo-size: calc(min($home-screen-width, $home-screen-height) * 0.8);
+#home-screen-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  @include colors.set-color(mat.get-color-from-palette(colors.$primary-palette, 200));
+  width: $logo-size;
+  height: $logo-size;
+  z-index: 0;
+}
+
+.header {
+  position: absolute;
+  right: 1em;
+  margin-top: 1em;
+  display: flex;
+  align-items: center;
+  gap: 2em;
+}
+
+.github-logo {
+  width: 3em;
+  height: 3em;
+}
+
+.main-section {
+  $breathing-margins: 20vh;
+  margin-top: $breathing-margins;
+  margin-bottom: $breathing-margins * 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+  gap: 4em;
+  font-size: large;
+  min-height: fit-content;
+}
+
+.presentation-slogan {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  font-size: 5em;
+}
+
+.example-screenshot {
+  border-radius: 1em;
+  width: 30vw;
+}
+
+.explanation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 75%;
+  text-align: center;
+  gap: 1em;
+}
+
+.get-started-button {
+  background: rgba(0,0,0,0.3);
+}
+
+.btn-icon {
+  max-width: 100%;
+  max-height: 1em;
+  padding: 0 !important;
+}

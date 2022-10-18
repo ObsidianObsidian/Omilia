@@ -1,0 +1,6 @@
+<div class="selection-board-container">
+  <span class="selection-board-profile" *ngFor="let option of options" (click)="onSelection(option)">
+    <img class="selection-board-profile-image" src="{{option.imageURL}}" [ngClass]="{'disabled': option.isDisabled}">
+    <span [ngClass]="{'disabled': option.isDisabled}">{{option.optionName}}</span>
+  </span>
+</div>

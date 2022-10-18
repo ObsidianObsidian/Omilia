@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  discord-exporter:
+    build: ./source/server/exporters/discord-exporter
+    depends_on:
+      - messaging-service
+    env_file:
+      - "../.env"
+      - "../firebase.env"
+    restart: on-failure
+  users-manager:
+    build: ./source/server/users-manager
+    depends_on:
+      - messaging-service
+    env_file:
+      - "../.env"
+      - "../firebase.env"
+    restart: on-failure
+  conversation-manager:
+    build: ./source/server/conversation-manager
+    ports:
+      - 5000:5000
+    depends_on:
+      - messaging-service
+    env_file:
+      - "../.env"
+      - "../firebase.env"
+    restart: on-failure
+  messaging-service:
+    image: rabbitmq:3.11-rc-management
+    ports:
+      - 15672:15672 # management plugin port

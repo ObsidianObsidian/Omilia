@@ -1,0 +1,38 @@
+@use "src/app/styles/colors.scss" as colors;
+@use "sass:color";
+
+#conversation-participant-container {
+  display: flex;
+  align-items: center;
+  height: fit-content;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.conversation-component-left-section {
+  display: flex;
+  gap: 1em;
+  min-width: fit-content;
+}
+
+.profile-picture {
+  $profile-picture-side: 4em;
+  width: $profile-picture-side;
+  height: $profile-picture-side;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+#central-information-section {
+  display: flex;
+  flex-direction: column;
+  font-size: larger;
+  justify-content: center;
+  gap: 0.2em;
+}
+
+.speaker-state-icons {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+}

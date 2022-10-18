@@ -1,0 +1,5 @@
+<div id="score-indicator-container">
+  <div *ngIf="!scoreUndefined()">{{displayScore()}}</div>
+  <div *ngIf="scoreUndefined()">...</div>
+</div>
+
