@@ -29,7 +29,6 @@ namespace EventsHub
 
         private void JoinGroup(string groupId) {
             Groups.AddToGroupAsync(Context.ConnectionId, groupId);
-            Console.WriteLine($"• Added to group {groupId}");
         }
 
         private void OnSessionCreate(Session.Session session) {

@@ -74,10 +74,6 @@ export class ConversationStateService {
     return this.sessionDataLoadedFlag
   }
 
-  getUnauthenticatedUsers (): string[] {
-    return Array.from(this.connectedUsers.keys()).filter(userId => !this.authenticatedUsers.has(userId))
-  }
-
   private setupListeners (): void {
     this.eventsService.hubConnection.on('loadSession', (event: string) => this.onLoadSession(Convert.toSessionStateInfo(event)))
     this.eventsService.getSessionEventObservable('userJoin').subscribe((event) => this.onUserJoin(Convert.toUserConnectionStatusEvent(event)))

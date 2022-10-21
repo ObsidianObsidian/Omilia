@@ -29,14 +29,12 @@ namespace conversationmanager {
     {
         static void Main(String[] args)
         {
-            Console.WriteLine("• conversation manager started");
             SetupListeners();
         }
 
         public static void SetupListeners() {
             var consumerTag = MessagingMediator.SetupListener(MessagingConstants.ExchangeNameExporter, "create_session", (model, ea) => {
                 var sessionCreationRequest = SessionCreationRequest.FromJson(Encoding.UTF8.GetString(ea.Body.ToArray()));
-                System.Console.WriteLine($"○ New CreateSessionRequest {sessionCreationRequest}");
                 createNewSession(sessionCreationRequest);
             });
         }
@@ -46,7 +44,6 @@ namespace conversationmanager {
             var session = new Session.Session(sessionId, sessionCreationRequest.Users.Select<UserProfileInfo, string>(usr => usr.Id).ToList());
             var response = new SessionCreationRequestResponse {SessionId = sessionId};
             MessagingMediator.Channel.BasicPublish(MessagingConstants.ExchangeNameConversationManager, mandatory: true, routingKey: $"create_session.{sessionCreationRequest.RequestId}", basicProperties: null, body: Encoding.UTF8.GetBytes(response.ToJson()));
-            Console.WriteLine($"• Created new session with id {response.SessionId}");
         }
     }
 }

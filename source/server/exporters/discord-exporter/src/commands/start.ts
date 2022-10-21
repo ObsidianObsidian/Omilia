@@ -3,12 +3,11 @@ import {
     guildIdToSessionId,
     messagingMainChannel,
     messagingMainExchangeName,
-    omiliaClient, onSessionEnd, sessionIdToGuildId,
+    sessionIdToGuildId,
     sessionIdToVoiceConnection
 } from "../app";
 import {v4 as uuidv4} from 'uuid';
 import {
-    Convert,
     SessionCreationRequest,
     SessionCreationRequestResponse, UserConnectionStatusEvent, UserProfileInfo,
 } from "../common-classes/common-classes";
@@ -68,46 +67,4 @@ async function setupListeners(sessionId: string, voiceConnection: VoiceConnectio
     voiceConnection.receiver.speaking.on("end", ((userId) => {
         messagingMainChannel.publish(messagingMainExchangeName, `session_id.${sessionId}.speaker_id.${userId}.speaking.stop`, Buffer.from(""))
     }));
-    omiliaClient.on('voiceStateUpdate', (oldState, newState) => {
-        onVoiceStateUpdate(oldState, newState, sessionId)
-    });
-}
-
-function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState, sessionId: string) {
-    const selfVoiceStateUpdate = oldState.member.user.id === omiliaClient.user.id
-    const isIrrelevantUserUpdate = oldState.member.user.bot && !selfVoiceStateUpdate
-    if (isIrrelevantUserUpdate) {
-        return
-    }
-
-    const isConnection = oldState.channel == null && newState.channel != null
-    const isDisconnection = oldState.channel != null && newState.channel == null
-    const connectionStatusChange = isConnection || isDisconnection
-    if (!connectionStatusChange) {
-        return
-    }
-    if (selfVoiceStateUpdate) {
-        onSelfVoiceStateUpdate(isConnection, sessionId)
-    } else {
-        onUserVoiceStateUpdate(newState.member, isConnection, sessionId)
-    }
-}
-
-function onSelfVoiceStateUpdate(isConnection: boolean, sessionId: string) {
-    if (!isConnection) {
-        onSessionEnd(sessionId)
-    }
-}
-
-function onUserVoiceStateUpdate(guildMember: GuildMember, isConnection: boolean, sessionId: string) {
-    const baseRoutingKey = `session_id.${sessionId}.speaker_id.${guildMember.id}.connection_status`
-    const connectionStatusIndicator = isConnection ? 'join' : 'leave'
-    const event: UserConnectionStatusEvent = {userId: guildMember.id, eventName: connectionStatusIndicator}
-    messagingMainChannel.publish(messagingMainExchangeName, `${baseRoutingKey}.${connectionStatusIndicator}`, Buffer.from(Convert.userSessionEventToJson(event)))
-    if (isConnection) {
-        const userProfileInfo: UserProfileInfo = {
-            avatarURL: guildMember.displayAvatarURL(), displayName: guildMember.displayName, id: guildMember.id
-        }
-        messagingMainChannel.publish(messagingMainExchangeName, 'user_join', Buffer.from(Convert.userProfileInfoToJson(userProfileInfo)))
-    }
 }

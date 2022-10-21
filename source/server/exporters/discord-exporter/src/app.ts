@@ -1,9 +1,10 @@
-import {Client, GatewayIntentBits} from "discord.js";
+import {Client, GatewayIntentBits, GuildMember, VoiceState} from "discord.js";
 import * as path from "path";
 import * as fs from "fs";
 import {Command} from "./commands/command";
 import client, {Channel, Connection} from 'amqplib'
 import {VoiceConnection} from "@discordjs/voice";
+import {Convert, UserConnectionStatusEvent, UserProfileInfo} from "./common-classes/common-classes";
 
 export let messagingMainChannel: Channel | undefined
 export const messagingMainExchangeName = "EXCHANGE_NAME_EXPORTER"
@@ -26,25 +27,10 @@ for (const file of commandFiles) {
     require(filePath);
 }
 
-
-
 export const omiliaClient = new OmiliaClient({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]});
 
 omiliaClient.once('ready', () => {
     console.log('Bot is ready');
-});
-
-omiliaClient.on('interactionCreate', async interaction => {
-    if (!interaction.isChatInputCommand()) return;
-
-    const command = omiliaClient.commands.get(interaction.commandName);
-    if (!command) return;
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        console.error(error);
-        await interaction.reply({content: 'Error while executing command', ephemeral: true});
-    }
 });
 
 async function setupMessaging(): Promise<void> {
@@ -59,7 +45,7 @@ async function setupMessaging(): Promise<void> {
 
 setupMessaging()
 
-export function onSessionEnd(sessionId: string) {
+export function onSessionEnd(sessionId: string): void {
     const voiceConnection = sessionIdToVoiceConnection.get(sessionId)
     if (voiceConnection !== null) {
         voiceConnection?.disconnect()
@@ -70,4 +56,67 @@ export function onSessionEnd(sessionId: string) {
     messagingMainChannel.publish(messagingMainExchangeName, `session_id.${sessionId}.end`, Buffer.from(""))
 }
 
-omiliaClient.login(process.env.DISCORDJS_BOT_TOKEN);
+function setupListeners(): void {
+    omiliaClient.on('voiceStateUpdate', (oldState, newState) => {
+        const sessionId = guildIdToSessionId.get(newState.guild.id)
+        if(sessionId !== null) {
+            onVoiceStateUpdate(oldState, newState, sessionId)
+        }
+    });
+
+    omiliaClient.on('interactionCreate', async interaction => {
+        if (!interaction.isChatInputCommand()) return;
+
+        const command = omiliaClient.commands.get(interaction.commandName);
+        if (!command) return;
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(error);
+            await interaction.reply({content: 'Error while executing command', ephemeral: true});
+        }
+    });
+}
+
+function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState, sessionId: string) {
+    const selfVoiceStateUpdate = oldState.member.user.id === omiliaClient.user.id
+    const isFromIrrelevantUser = oldState.member.user.bot && !selfVoiceStateUpdate
+    if (isFromIrrelevantUser) {
+        return
+    }
+
+    const isConnection = oldState.channel == null && newState.channel != null
+    const isDisconnection = oldState.channel != null && newState.channel == null
+    const connectionStatusChange = isConnection || isDisconnection
+    if (!connectionStatusChange) {
+        return
+    }
+    if (selfVoiceStateUpdate) {
+        onSelfVoiceStateUpdate(isConnection, sessionId)
+    } else {
+        onUserVoiceStateUpdate(newState.member, isConnection, sessionId)
+    }
+}
+
+function onSelfVoiceStateUpdate(isConnection: boolean, sessionId: string) {
+    if (!isConnection) {
+        onSessionEnd(sessionId)
+    }
+}
+
+function onUserVoiceStateUpdate(guildMember: GuildMember, isConnection: boolean, sessionId: string) {
+    const baseRoutingKey = `session_id.${sessionId}.speaker_id.${guildMember.id}.connection_status`
+    const connectionStatusIndicator = isConnection ? 'join' : 'leave'
+    const event: UserConnectionStatusEvent = {userId: guildMember.id, eventName: connectionStatusIndicator}
+    messagingMainChannel.publish(messagingMainExchangeName, `${baseRoutingKey}.${connectionStatusIndicator}`, Buffer.from(Convert.userSessionEventToJson(event)))
+    if (isConnection) {
+        const userProfileInfo: UserProfileInfo = {
+            avatarURL: guildMember.displayAvatarURL(), displayName: guildMember.displayName, id: guildMember.id
+        }
+        messagingMainChannel.publish(messagingMainExchangeName, 'user_join', Buffer.from(Convert.userProfileInfoToJson(userProfileInfo)))
+    }
+}
+
+
+setupListeners()
+omiliaClient.login(process.env.DISCORDJS_BOT_TOKEN)

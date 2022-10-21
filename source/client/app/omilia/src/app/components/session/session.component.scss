@@ -1,10 +1,8 @@
 .session-container {
-
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
 }
 
 .profile-selection-board {
@@ -16,6 +14,11 @@
   flex-direction: column;
   align-items: center;
   width: 80vw;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .intro-phrase {

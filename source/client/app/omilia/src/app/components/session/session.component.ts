@@ -31,7 +31,6 @@ export class SessionComponent implements OnInit {
       }
       return asBoardOption
     })
-    console.log(`connectedUsers ${this.conversationStateService.connectedUsers.size}`)
     return options
   }
 
