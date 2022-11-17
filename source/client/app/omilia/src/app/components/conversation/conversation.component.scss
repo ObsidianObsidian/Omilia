@@ -1,7 +1,6 @@
 @use "src/app/styles/colors" as colors;
 
 #conversation-container {
-  min-width: 600px;
   width: fit-content;
   display: flex;
   flex-direction: column;
@@ -9,6 +8,7 @@
   gap: 2em;
 
   padding-top: 4em;
+  text-align: center;
 
   .conversation-title {
     font-size: 2em;
@@ -19,7 +19,6 @@
   flex-direction: column;
   gap: 1em;
   width: 100%;
-  min-width: fit-content;
 }
 
 .conversation-divider {

@@ -87,19 +87,16 @@ export class ConversationStateService {
   }
 
   private onUserJoin (event: UserConnectionStatusEvent): void {
-    console.log('• onUserJoin called')
     void this.registerUser(event.userId)
   }
 
   private onUserLeave (event: UserConnectionStatusEvent): void {
-    console.log('• onUserLeave called')
     this.connectedUsers.delete(event.userId)
     this.requestsToSpeak.delete(event.userId)
   }
 
   private onLoadSession (event: SessionStateInfo): void {
     this.sessionDataLoadedFlag = true
-    console.log('• load session called')
     event.connectedSpeakers.forEach(speakerId => {
       void this.registerUser(speakerId)
     })
