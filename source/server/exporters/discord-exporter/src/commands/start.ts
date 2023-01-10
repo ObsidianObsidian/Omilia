@@ -2,15 +2,15 @@ import {Command} from "./command";
 import {
     guildIdToSessionId,
     messagingMainChannel,
-    messagingMainExchangeName,
+    messagingExporterExchangeName,
     sessionIdToGuildId,
     sessionIdToVoiceConnection
 } from "../app";
 import {v4 as uuidv4} from 'uuid';
 import {
-    SessionCreationRequest,
+    SessionCreationRequest, UserSessionEvent,
     SessionCreationRequestResponse, UserConnectionStatusEvent, UserProfileInfo,
-} from "../common-classes/common-classes";
+} from "../common-types/common-types";
 import {GuildMember, VoiceBasedChannel, VoiceState} from 'discord.js';
 import {joinVoiceChannel, VoiceConnection} from "@discordjs/voice";
 
@@ -47,7 +47,7 @@ async function requestNewSession(users: UserProfileInfo[]): Promise<string> {
                 const sessionCreationResponse: SessionCreationRequestResponse = JSON.parse(msg.content.toString())
                 resolve(sessionCreationResponse.sessionId)
             }, {noAck: true})
-            messagingMainChannel.publish(messagingMainExchangeName, 'create_session', Buffer.from(JSON.stringify(createSessionRequest)))
+            messagingMainChannel.publish(messagingExporterExchangeName, 'create_session', Buffer.from(JSON.stringify(createSessionRequest)))
         });
     });
 }
@@ -62,9 +62,11 @@ async function connectToVoiceChannel(sessionId: string, voiceChannel: VoiceBased
 
 async function setupListeners(sessionId: string, voiceConnection: VoiceConnection): Promise<void> {
     voiceConnection.receiver.speaking.on("start", ((userId) => {
-        messagingMainChannel.publish(messagingMainExchangeName, `session_id.${sessionId}.speaker_id.${userId}.speaking.start`, Buffer.from(""))
+        const userSessionEvent:UserSessionEvent = {sessionId, userId}
+        messagingMainChannel.publish(messagingExporterExchangeName, `session_id.${sessionId}.speaker_id.${userId}.speaking.start`, Buffer.from(JSON.stringify(userSessionEvent)))
     }));
     voiceConnection.receiver.speaking.on("end", ((userId) => {
-        messagingMainChannel.publish(messagingMainExchangeName, `session_id.${sessionId}.speaker_id.${userId}.speaking.stop`, Buffer.from(""))
+        const userSessionEvent:UserSessionEvent = {sessionId, userId}
+        messagingMainChannel.publish(messagingExporterExchangeName, `session_id.${sessionId}.speaker_id.${userId}.speaking.stop`, Buffer.from(JSON.stringify(userSessionEvent)))
     }));
 }

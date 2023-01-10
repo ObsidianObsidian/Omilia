@@ -3,7 +3,7 @@ import { ConversationParticipant } from '../../classes/conversation-participant'
 import { ConversationStateService } from '../../services/conversation-state.service'
 import { AuthenticationService } from '../../services/authentication.service'
 import { ConversationEventsService } from '../../services/conversation-events.service'
-import { Convert } from '../../classes/common-classes/common-classes'
+import {Convert, UserSessionAction} from '../../classes/common-types/common-types'
 
 @Component({
   selector: 'app-conversation',
@@ -64,18 +64,8 @@ export class ConversationComponent implements OnInit {
     if (!this.authenticationService.isAuthenticated() || userId === null) {
       return
     }
-    const eventPayload = Convert.userSessionEventToJson({ userId })
-    if (this.ongoingRequest()) {
-      this.conversationEventsService.sendNotificationToSession({
-        eventName: 'endRequestToSpeak',
-        eventPayload
-      })
-    } else {
-      this.conversationEventsService.sendNotificationToSession({
-        eventName: 'requestToSpeak',
-        eventPayload
-      })
-    }
+    const userSessionAction: UserSessionAction = { userId, sessionId: this.conversationStateService.sessionId === undefined ? '' : this.conversationStateService.sessionId, eventName: this.ongoingRequest() ? 'endRequestToSpeak' : 'requestToSpeak'}
+    this.conversationEventsService.sendActionRequestToSession(userSessionAction)
   }
 
   ngOnInit (): void {

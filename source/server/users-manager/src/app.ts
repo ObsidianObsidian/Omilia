@@ -4,7 +4,7 @@ import {
     SessionCreationRequest,
     UserConnectionStatusEvent,
     UserProfileInfo
-} from "./common-classes/common-classes";
+} from "./common-types/common-types";
 import {FirebaseApp} from "@firebase/app";
 import admin from 'firebase-admin'
 
@@ -31,7 +31,7 @@ async function main() {
 }
 
 async function setupMessaging(): Promise<void> {
-    const connection: Connection = await client.connect(`amqp://guest:guest@messaging-service:5672`)
+    const connection: Connection = await client.connect(`amqp://guest:guest@messaging-service`)
     const channel: Channel = await connection.createChannel()
     messagingChannel = channel
     await channel.assertExchange('EXCHANGE_NAME_EXPORTER', 'topic', {durable: false})

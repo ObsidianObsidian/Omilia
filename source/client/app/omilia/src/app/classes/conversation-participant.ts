@@ -1,4 +1,4 @@
-import { UserProfileInfo } from './common-classes/common-classes'
+import { UserProfileInfo } from './common-types/common-types'
 
 export interface ConversationParticipant {
   profileInfo: UserProfileInfo

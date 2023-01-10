@@ -1,5 +1,5 @@
 import {Command} from "./command";
-import {guildIdToSessionId, onSessionEnd} from "../app";
+import {guildIdToSessionId, endSession} from "../app";
 
 new Command('stop', 'Stops current session', async (interaction) => {
     if (!guildIdToSessionId.has(interaction.guild.id)) {
@@ -7,6 +7,6 @@ new Command('stop', 'Stops current session', async (interaction) => {
         return
     }
     const sessionId = guildIdToSessionId.get(interaction.guild.id);
-    onSessionEnd(sessionId)
+    endSession(sessionId)
     interaction.reply('Session ended')
 })

@@ -4,10 +4,10 @@ import * as fs from "fs";
 import {Command} from "./commands/command";
 import client, {Channel, Connection} from 'amqplib'
 import {VoiceConnection} from "@discordjs/voice";
-import {Convert, UserConnectionStatusEvent, UserProfileInfo} from "./common-classes/common-classes";
+import {Convert, UserConnectionStatusEvent, UserProfileInfo} from "./common-types/common-types";
 
 export let messagingMainChannel: Channel | undefined
-export const messagingMainExchangeName = "EXCHANGE_NAME_EXPORTER"
+export const messagingExporterExchangeName = "EXCHANGE_NAME_EXPORTER"
 export const guildIdToSessionId = new Map<string,string>();
 export const sessionIdToGuildId = new Map<string,string>();
 export const sessionIdToVoiceConnection = new Map<string, VoiceConnection>()
@@ -34,26 +34,29 @@ omiliaClient.once('ready', () => {
 });
 
 async function setupMessaging(): Promise<void> {
-    const connection: Connection = await client.connect(`amqp://guest:guest@messaging-service:5672`);
+    const connection: Connection = await client.connect(`amqp://guest:guest@messaging-service`);
     console.log('connection successful')
     const channel: Channel = await connection.createChannel()
     messagingMainChannel = channel
-    await channel.assertExchange(messagingMainExchangeName, 'topic', {durable: false})
+    await channel.assertExchange(messagingExporterExchangeName, 'topic', {durable: false})
     await channel.assertExchange("EXCHANGE_NAME_CONVERSATION_MANAGER", 'topic', {durable: false})
 }
 
 
 setupMessaging()
 
-export function onSessionEnd(sessionId: string): void {
+export function endSession(sessionId: string): void {
     const voiceConnection = sessionIdToVoiceConnection.get(sessionId)
     if (voiceConnection !== null) {
         voiceConnection?.disconnect()
     }
+    if (!sessionIdToGuildId.has(sessionId)) {
+        return
+    }
     guildIdToSessionId.delete(sessionIdToGuildId.get(sessionId))
     sessionIdToGuildId.delete(sessionId)
     sessionIdToVoiceConnection.delete(sessionId)
-    messagingMainChannel.publish(messagingMainExchangeName, `session_id.${sessionId}.end`, Buffer.from(""))
+    messagingMainChannel.publish(messagingExporterExchangeName, `session_id.${sessionId}.end`, Buffer.from(Convert.sessionEventToJson({sessionId: sessionId})))
 }
 
 function setupListeners(): void {
@@ -100,20 +103,20 @@ function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState, sessionI
 
 function onSelfVoiceStateUpdate(isConnection: boolean, sessionId: string) {
     if (!isConnection) {
-        onSessionEnd(sessionId)
+        endSession(sessionId)
     }
 }
 
 function onUserVoiceStateUpdate(guildMember: GuildMember, isConnection: boolean, sessionId: string) {
     const baseRoutingKey = `session_id.${sessionId}.speaker_id.${guildMember.id}.connection_status`
     const connectionStatusIndicator = isConnection ? 'join' : 'leave'
-    const event: UserConnectionStatusEvent = {userId: guildMember.id, eventName: connectionStatusIndicator}
-    messagingMainChannel.publish(messagingMainExchangeName, `${baseRoutingKey}.${connectionStatusIndicator}`, Buffer.from(Convert.userSessionEventToJson(event)))
+    const event: UserConnectionStatusEvent = {userId: guildMember.id, eventName: connectionStatusIndicator, sessionId}
+    messagingMainChannel.publish(messagingExporterExchangeName, `${baseRoutingKey}.${connectionStatusIndicator}`, Buffer.from(Convert.userSessionEventToJson(event)))
     if (isConnection) {
         const userProfileInfo: UserProfileInfo = {
             avatarURL: guildMember.displayAvatarURL(), displayName: guildMember.displayName, id: guildMember.id
         }
-        messagingMainChannel.publish(messagingMainExchangeName, 'user_join', Buffer.from(Convert.userProfileInfoToJson(userProfileInfo)))
+        messagingMainChannel.publish(messagingExporterExchangeName, 'user_join', Buffer.from(Convert.userProfileInfoToJson(userProfileInfo)))
     }
 }
 

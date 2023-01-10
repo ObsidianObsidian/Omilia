@@ -19,6 +19,10 @@ interface SocketConnectionInfo {
 
 interface UserSessionEvent {
     userId: string;
+    sessionId: string
+}
+
+interface UserSessionAction extends UserConnectionStatusEvent {
 }
 
 interface ScoresUpdateEvent {
@@ -27,6 +31,10 @@ interface ScoresUpdateEvent {
 
 interface UserConnectionStatusEvent extends UserSessionEvent {
     eventName: string;
+}
+
+interface SessionEvent {
+    sessionId: string;
 }
 
 interface NotificationFromSessionEvent {
@@ -61,4 +69,3 @@ interface DBUserProfileInfo {
 interface OmiliaError {
     errorName: string;
 }
-

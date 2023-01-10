@@ -1,7 +1,12 @@
 import { Injectable } from '@angular/core'
 import { ConversationEventsService } from './conversation-events.service'
 import { ConversationStateService } from './conversation-state.service'
-import { Convert, NotificationToSessionEvent, UserSessionEvent } from '../classes/common-classes/common-classes'
+import {
+  Convert,
+  NotificationToSessionEvent,
+  UserSessionAction,
+  UserSessionEvent
+} from '../classes/common-types/common-types'
 
 const AUTHENTICATION_STORAGE_KEY = 'authentication.userId'
 
@@ -15,9 +20,8 @@ export class AuthenticationService {
 
   authenticateAsUser (userId: string): void {
     localStorage.setItem(AUTHENTICATION_STORAGE_KEY, userId)
-    const event: UserSessionEvent = { userId }
-    const notification: NotificationToSessionEvent = { eventName: 'authentication', eventPayload: Convert.userSessionEventToJson(event) }
-    this.conversationEventsService.sendNotificationToSession(notification)
+    const notification: UserSessionAction = { eventName: 'authenticate', userId, sessionId: this.conversationStateService.sessionId === undefined ? '' : this.conversationStateService.sessionId }
+    this.conversationEventsService.sendActionRequestToSession(notification)
   };
 
   isAuthenticated (): boolean {

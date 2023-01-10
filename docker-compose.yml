@@ -27,6 +27,6 @@ services:
       - "../firebase.env"
     restart: on-failure
   messaging-service:
-    image: rabbitmq:3.11-rc-management
+    image: rabbitmq:3.11.6-management
     ports:
       - 15672:15672 # management plugin port

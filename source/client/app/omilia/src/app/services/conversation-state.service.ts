@@ -4,10 +4,12 @@ import {
   DBUserProfileInfo, ScoresUpdateEvent, SessionStateInfo,
   UserConnectionStatusEvent,
   UserProfileInfo, UserSessionEvent
-} from '../classes/common-classes/common-classes'
+} from '../classes/common-types/common-types'
 import { FirebaseApp, initializeApp } from 'firebase/app'
 import { getFirestore, Firestore, doc, getDoc, onSnapshot } from 'firebase/firestore'
-import { ConversationEventsService } from './conversation-events.service'
+import { CONVERSATION_MANAGER_URL, ConversationEventsService } from './conversation-events.service'
+import { HttpClient } from '@angular/common/http'
+import { filter } from 'rxjs'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAMHtHjdNLCTPqwRUGmRYk25VGXYPb-ARA',
@@ -34,10 +36,11 @@ export class ConversationStateService {
   private readonly firebaseApp: FirebaseApp
   private readonly fireStore: Firestore
 
-  constructor (private readonly eventsService: ConversationEventsService) {
+  constructor (private readonly eventsService: ConversationEventsService, private readonly httpClient: HttpClient) {
     this.firebaseApp = initializeApp(firebaseConfig)
     this.fireStore = getFirestore(this.firebaseApp)
     this.setupListeners()
+    this.fetchSessionStateInfo()
   }
 
   private async registerUser (userId: string): Promise<void> {
@@ -70,20 +73,32 @@ export class ConversationStateService {
     this.eventsService.sessionId = newId
   }
 
+  fetchSessionStateInfo (): void {
+    setTimeout(() => {
+      if (this.sessionId !== undefined) {
+        this.httpClient.get(`${CONVERSATION_MANAGER_URL}/session/state?sessionId=${this.sessionId}`).subscribe((e) => {
+          this.onLoadSession(e as SessionStateInfo)
+        }, error => console.log(error))
+      }
+    })
+  }
+
   getSessionDataLoadedFlag (): boolean {
     return this.sessionDataLoadedFlag
   }
 
   private setupListeners (): void {
-    this.eventsService.hubConnection.on('loadSession', (event: string) => this.onLoadSession(Convert.toSessionStateInfo(event)))
-    this.eventsService.getSessionEventObservable('userJoin').subscribe((event) => this.onUserJoin(Convert.toUserConnectionStatusEvent(event)))
-    this.eventsService.getSessionEventObservable('userLeave').subscribe((event: string) => this.onUserLeave(Convert.toUserConnectionStatusEvent(event)))
-    this.eventsService.getSessionEventObservable('userScoresUpdate').subscribe((event: string) => this.onUsersScoreUpdate(Convert.toScoresUpdateEvent(event)))
-    this.eventsService.getSessionEventObservable('requestToSpeak').subscribe((event: string) => this.onRequestToSpeak(Convert.toUserSessionEvent(event)))
-    this.eventsService.getSessionEventObservable('endRequestToSpeak').subscribe((event: string) => this.onEndRequestToSpeak(Convert.toUserSessionEvent(event)))
-    this.eventsService.getSessionEventObservable('sessionEnded').subscribe(() => this.onSessionEnd())
-    this.eventsService.getSessionEventObservable('authentication').subscribe((event: string) => this.onAuthenticatedUserAdd(Convert.toUserSessionEvent(event)))
-    this.eventsService.getSessionEventObservable('endAuthentication').subscribe((event: string) => this.onAuthenticatedUserRemove(Convert.toUserSessionEvent(event)))
+    this.eventsService.getEventSourceObservable().subscribe((eventSource) => {
+      console.log('• onNewEventSource', eventSource)
+      eventSource.addEventListener('userJoin', (event: MessageEvent) => { this.onUserJoin(Convert.toUserConnectionStatusEvent(event.data)) })
+      eventSource.addEventListener('userLeave', (event: MessageEvent) => { this.onUserLeave(Convert.toUserConnectionStatusEvent(event.data)) })
+      eventSource.addEventListener('userScoresUpdate', (event: MessageEvent) => { this.onUsersScoreUpdate(Convert.toScoresUpdateEvent(event.data)) })
+      eventSource.addEventListener('requestToSpeak', (event: MessageEvent) => { this.onRequestToSpeak(Convert.toUserSessionEvent(event.data)) })
+      eventSource.addEventListener('endRequestToSpeak', (event: MessageEvent) => { this.onEndRequestToSpeak(Convert.toUserSessionEvent(event.data)) })
+      eventSource.addEventListener('sessionEnded', (event: MessageEvent) => { this.onSessionEnd() })
+      eventSource.addEventListener('authentication', (event: MessageEvent) => {this.onAuthenticatedUserAdd(Convert.toUserSessionEvent(event.data)) })
+      eventSource.addEventListener('endAuthentication', (event: MessageEvent) => { this.onAuthenticatedUserRemove(Convert.toUserSessionEvent(event.data)) })
+    })
   }
 
   private onUserJoin (event: UserConnectionStatusEvent): void {
